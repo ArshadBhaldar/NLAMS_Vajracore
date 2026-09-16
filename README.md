@@ -1,33 +1,78 @@
-# NLAMS_Vajracore
+# NLAMS Vajracore
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+NLAMS Vajracore is a role-based land management and agricultural services platform built for coordinated government, field, and landholder workflows. The application gives each user type a focused dashboard for reviewing proposals, completing field surveys, and managing land records through a consistent, accessible interface.
 
-## Built with v0
+## Features
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+- Role-aware dashboards for State Monitors, District Officers, Field Officers, and Landholders
+- Proposal review and submission workflows
+- Field survey checklists and verification tools
+- Land parcel overview and status tracking
+- Shared responsive navigation with collapsible sidebar support
+- Route-specific dashboard views with role-aware labels and actions
+- Dark, high-contrast interface optimized for operational use
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_EQe57JDchnNVDLm5KY49pDgZXan9)
+## Application Routes
+
+- `/dashboard` — role-based overview dashboard
+- `/workbench` — proposal review workbench
+- `/submit-proposal` — proposal submission workflow
+- `/field-survey` — field verification and survey checklist
+- `/my-land` — landholder parcel dashboard
+
+## Technology
+
+- [Next.js](https://nextjs.org) with the App Router
+- [React](https://react.dev)
+- [TypeScript](https://www.typescriptlang.org)
+- [Tailwind CSS](https://tailwindcss.com)
+- [shadcn/ui](https://ui.shadcn.com)
+- [Lucide](https://lucide.dev) icons
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18.18 or newer
+- npm, pnpm, yarn, or another compatible package manager
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
+
+Start the local development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production build
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
 
-To learn more, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+```text
+app/                 Next.js routes and layouts
+components/          Reusable application and UI components
+public/              Static assets
+```
+
+## Development Notes
+
+The primary application shell lives in `components/nlams-app.tsx`. Route pages compose the shared shell while providing the appropriate role, navigation context, and dashboard content for each workflow.
+
+This project is connected to [v0](https://v0.app), so the interface can be iterated from the linked v0 project and synchronized with the connected GitHub repository.
+
+## License
+
+This project is maintained for the NLAMS Vajracore application. Add the appropriate license before distributing the code publicly.
