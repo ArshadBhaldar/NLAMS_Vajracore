@@ -1,5 +1,5 @@
 import NlamsApp from "@/components/nlams-app"
 
-export default function Page() {
+export default function WorkbenchPage() {
   return <NlamsApp />
 }
