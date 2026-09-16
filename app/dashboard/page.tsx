@@ -1,0 +1,5 @@
+import NlamsApp from "@/components/nlams-app"
+
+export default function DashboardPage() {
+  return <NlamsApp />
+}
