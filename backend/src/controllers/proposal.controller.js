@@ -4,16 +4,16 @@ const { assertValidTransition, TRANSITION_ROLE } = require('../utils/stateMachin
 
 // Requiring Body creates a new proposal (always starts at DRAFT)
 async function createProposal(req, res) {
-  const { project_name, district, state, area_hectares, assigned_cala_id } = req.body;
+  const { project_name, district, state, area_hectares, assigned_cala_id, justification } = req.body;
 
   if (!project_name || !district || !state || !area_hectares) {
     return res.status(400).json({ error: 'project_name, district, state, area_hectares are required' });
   }
 
   const result = await db.query(
-    `INSERT INTO proposals (project_name, requiring_body_id, district, state, area_hectares, assigned_cala_id)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [project_name, req.user.id, district, state, area_hectares, assigned_cala_id || null]
+    `INSERT INTO proposals (project_name, requiring_body_id, district, state, area_hectares, justification, assigned_cala_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [project_name, req.user.id, district, state, area_hectares, justification || null, assigned_cala_id || null]
   );
 
   const proposal = result.rows[0];

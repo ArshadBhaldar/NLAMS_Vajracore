@@ -50,7 +50,7 @@ async function createParcel(req, res) {
 
 async function listParcelsForProposal(req, res) {
   const result = await db.query(
-    `SELECT id, proposal_id, ulpin, owner_name, claimed_area_sqm,
+    `SELECT id, proposal_id, ulpin, owner_name, citizen_id, claimed_area_sqm,
             ST_AsGeoJSON(geom)::json AS geometry,
             restricted_zone_overlap, overlap_details, created_at
      FROM parcels WHERE proposal_id = $1`,
@@ -59,4 +59,16 @@ async function listParcelsForProposal(req, res) {
   res.json(result.rows);
 }
 
-module.exports = { createParcel, listParcelsForProposal };
+// CITIZEN: fetch only parcels linked to the logged-in citizen's user ID
+async function listMyParcels(req, res) {
+  const result = await db.query(
+    `SELECT id, proposal_id, ulpin, owner_name, citizen_id, claimed_area_sqm,
+            ST_AsGeoJSON(geom)::json AS geometry,
+            restricted_zone_overlap, overlap_details, created_at
+     FROM parcels WHERE citizen_id = $1`,
+    [req.user.id]
+  );
+  res.json(result.rows);
+}
+
+module.exports = { createParcel, listParcelsForProposal, listMyParcels };

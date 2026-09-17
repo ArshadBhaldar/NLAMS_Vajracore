@@ -20,9 +20,9 @@ INSERT INTO proposals (id, project_name, requiring_body_id, district, state, are
    '22222222-2222-2222-2222-222222222222');
 
 -- A parcel under that proposal, deliberately overlapping the restricted zone above
-INSERT INTO parcels (id, proposal_id, ulpin, owner_name, claimed_area_sqm, geom) VALUES
+INSERT INTO parcels (id, proposal_id, ulpin, owner_name, citizen_id, claimed_area_sqm, geom) VALUES
   ('b1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111',
-   'MH1234567890', 'Ganesh Patil', 12000,
+   'MH1234567890', 'Ganesh Patil', '55555555-5555-5555-5555-555555555555', 12000,
    ST_GeogFromText('POLYGON((73.56 18.51, 73.59 18.51, 73.59 18.54, 73.56 18.54, 73.56 18.51))'));
 
 -- Compensation record for that parcel

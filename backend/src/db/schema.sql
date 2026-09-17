@@ -58,6 +58,7 @@ CREATE TABLE proposals (
   district VARCHAR(100) NOT NULL,
   state VARCHAR(100) NOT NULL,
   area_hectares NUMERIC(12,3) NOT NULL,
+  justification TEXT,                          -- public purpose rationale
   stage proposal_stage NOT NULL DEFAULT 'DRAFT',
   litigation_risk_score NUMERIC(5,2),        -- 0-100, filled by risk engine
   litigation_risk_band VARCHAR(10),           -- LOW / MEDIUM / HIGH
@@ -76,6 +77,7 @@ CREATE TABLE parcels (
   proposal_id UUID NOT NULL REFERENCES proposals(id) ON DELETE CASCADE,
   ulpin VARCHAR(30),                          -- Bhu-Aadhaar / ULPIN reference
   owner_name VARCHAR(200),
+  citizen_id UUID REFERENCES users(id),       -- links parcel to a citizen user
   claimed_area_sqm NUMERIC(14,2),
   geom GEOGRAPHY(POLYGON, 4326) NOT NULL,     -- GPS polygon, WGS84
   restricted_zone_overlap BOOLEAN DEFAULT FALSE,
@@ -85,6 +87,7 @@ CREATE TABLE parcels (
 
 CREATE INDEX idx_parcels_geom ON parcels USING GIST(geom);
 CREATE INDEX idx_parcels_proposal ON parcels(proposal_id);
+CREATE INDEX idx_parcels_citizen ON parcels(citizen_id);
 
 -- Seeded restricted zones (forest land, protected areas, etc.) for overlap checks
 CREATE TABLE restricted_zones (
