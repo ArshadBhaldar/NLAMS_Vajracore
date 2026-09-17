@@ -140,11 +140,37 @@ export interface Objection {
   parcel_id: string | null
   filed_by: string
   reason: string
-  status: 'OPEN' | 'RESOLVED' | 'REJECTED'
+  status: 'OPEN' | 'REVIEWING' | 'HEARING_SCHEDULED' | 'RESOLVED' | 'REJECTED'
   filed_at: string
   resolved_at: string | null
   resolution_notes: string | null
   filed_by_name?: string
+}
+
+export interface ScrutinyReport {
+  id?: string
+  proposal_id: string
+  agent_name: string
+  status: 'PASS' | 'FLAGGED'
+  report_data: {
+    overall_status: 'PASS' | 'FLAGGED'
+    legal_result: {
+      status: 'PASS' | 'FLAGGED'
+      details: string
+    }
+    geospatial_result: {
+      status: 'PASS' | 'FLAGGED'
+      summary: string
+      overlaps: any[]
+    }
+    rr_result: {
+      status: 'PASS' | 'FLAGGED'
+      summary: string
+      total_compensation: number
+      breakdown: any[]
+    }
+  }
+  created_at: string
 }
 
 export interface DocumentRecord {

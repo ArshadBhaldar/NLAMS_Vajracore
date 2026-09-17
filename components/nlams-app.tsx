@@ -34,7 +34,7 @@ import {
   ROLE_LABELS, STAGE_LABELS, STAGE_ORDER, TRANSITIONS,
   type UserRole, type ProposalStage,
   type DashboardSummary, type Proposal, type Compensation, type Objection,
-  type Parcel, type DocumentRecord,
+  type Parcel, type DocumentRecord, type ScrutinyReport,
 } from "@/lib/types"
 
 // ─── Navigation per role ──────────────────────────────────────
@@ -467,8 +467,42 @@ function Dashboard() {
 function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition: () => void }) {
   const [transitioning, setTransitioning] = useState(false)
   const [error, setError] = useState("")
+  const [report, setReport] = useState<ScrutinyReport | null>(null)
+  const [loadingReport, setLoadingReport] = useState(true)
+  const [triggering, setTriggering] = useState(false)
 
   const nextStages = TRANSITIONS[proposal.stage] || []
+
+  const fetchReport = useCallback(async () => {
+    setLoadingReport(true)
+    try {
+      const data = await api.get<ScrutinyReport>(`/proposals/${proposal.id}/scrutiny`)
+      setReport(data)
+    } catch (err: any) {
+      if (err.status !== 404) {
+        setError("Failed to fetch report")
+      }
+    } finally {
+      setLoadingReport(false)
+    }
+  }, [proposal.id])
+
+  useEffect(() => {
+    fetchReport()
+  }, [fetchReport])
+
+  async function handleTrigger() {
+    setTriggering(true)
+    setError("")
+    try {
+      const data = await api.post<ScrutinyReport>(`/proposals/${proposal.id}/scrutinize`)
+      setReport(data)
+    } catch (err: any) {
+      setError(err.message || "Failed to run AI Scrutiny")
+    } finally {
+      setTriggering(false)
+    }
+  }
 
   async function handleTransition(toStage: ProposalStage) {
     setTransitioning(true)
@@ -485,45 +519,72 @@ function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition
 
   return (
     <div className="grid gap-3 border-t border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-3">
-      <Card className="shadow-none">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Gavel className="size-4 text-teal-700" /> Legal Scrutinizer <Status>Low</Status>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs text-slate-600">
-          <p className="mb-2 font-medium text-emerald-700">Passed — no critical issues</p>
-          <ul className="flex flex-col gap-2">
-            <li>• Section 3A notification verified</li>
-            <li>• Title chain documents complete</li>
-            <li>• Public hearing record attached</li>
-          </ul>
-        </CardContent>
-      </Card>
-      <Card className="shadow-none">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Map className="size-4 text-teal-700" /> Geospatial Analyzer <Status>Low</Status>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs text-slate-600">
-          <p className="mb-2 font-medium text-emerald-700">No overlap detected</p>
-          <p>Polygon aligns with sanctioned alignment. 0.3 ha buffer variance within threshold.</p>
-        </CardContent>
-      </Card>
-      <Card className="shadow-none">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Users className="size-4 text-teal-700" /> R&amp;R Calculator
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-xs text-slate-600">
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between"><span>Current stage</span><b>{STAGE_LABELS[proposal.stage]}</b></div>
-            <div className="flex justify-between"><span>Area</span><b>{fmtHectares(proposal.area_hectares)}</b></div>
-          </div>
-        </CardContent>
-      </Card>
+      {loadingReport ? (
+        <div className="col-span-3 flex justify-center py-6">
+          <Spinner />
+        </div>
+      ) : !report ? (
+        <div className="col-span-3 flex flex-col items-center justify-center gap-4 py-6">
+          <p className="text-sm text-slate-500">No AI Scrutiny run yet for this proposal.</p>
+          <Button onClick={handleTrigger} disabled={triggering} className="bg-[#0b5664] hover:bg-[#083f4a]">
+            {triggering ? <Spinner className="mr-2 text-white size-4" /> : <ShieldCheck data-icon="inline-start" />}
+            {triggering ? "Running AI Agents..." : "Run AI Scrutiny"}
+          </Button>
+        </div>
+      ) : (
+        <>
+          <Card className="shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2"><Gavel className="size-4 text-teal-700" /> Legal Scrutinizer</span>
+                <Status>{report.report_data.legal_result.status}</Status>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-slate-600">
+              <p className={`mb-2 font-medium ${report.report_data.legal_result.status === 'PASS' ? 'text-emerald-700' : 'text-red-700'}`}>
+                {report.report_data.legal_result.status === 'PASS' ? 'Passed — Verification complete' : 'Flagged — Discrepancies found'}
+              </p>
+              <p>{report.report_data.legal_result.details}</p>
+            </CardContent>
+          </Card>
+          <Card className="shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2"><Map className="size-4 text-teal-700" /> Geospatial Analyzer</span>
+                <Status>{report.report_data.geospatial_result.status}</Status>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-slate-600">
+              <p className={`mb-2 font-medium ${report.report_data.geospatial_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {report.report_data.geospatial_result.summary}
+              </p>
+              {report.report_data.geospatial_result.overlaps.length > 0 && (
+                <ul className="flex flex-col gap-1 mt-2">
+                  {report.report_data.geospatial_result.overlaps.map((o: any, i: number) => (
+                    <li key={i}>• {o.zone} overlap on Parcel {o.parcel}</li>
+                  ))}
+                </ul>
+              )}
+            </CardContent>
+          </Card>
+          <Card className="shadow-none">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2"><Users className="size-4 text-teal-700" /> R&amp;R Calculator</span>
+                <Status>{report.report_data.rr_result.status}</Status>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-xs text-slate-600">
+              <p className={`mb-2 font-medium ${report.report_data.rr_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {report.report_data.rr_result.summary}
+              </p>
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex justify-between"><span>Est. Total Compensation</span><b className="text-emerald-700 font-mono">₹{report.report_data.rr_result.total_compensation.toLocaleString('en-IN')}</b></div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {error && (
         <div className="lg:col-span-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -532,18 +593,26 @@ function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition
       )}
 
       {nextStages.length > 0 && (
-        <div className="lg:col-span-3 flex flex-wrap gap-3">
-          {nextStages.map((stage) => (
-            <Button
-              key={stage}
-              className="bg-[#0b5664] hover:bg-[#083f4a]"
-              disabled={transitioning}
-              onClick={() => handleTransition(stage)}
-            >
-              {transitioning ? <Spinner className="mr-2 size-4 text-white" /> : <Check data-icon="inline-start" />}
-              {stage === "DISPUTED" ? "Mark as Disputed" : `Advance to ${STAGE_LABELS[stage]}`}
-            </Button>
-          ))}
+        <div className="lg:col-span-3 flex flex-wrap gap-3 items-center justify-between">
+          <div className="flex gap-3">
+            {nextStages.map((stage) => (
+              <Button
+                key={stage}
+                className="bg-[#0b5664] hover:bg-[#083f4a]"
+                disabled={transitioning || loadingReport}
+                onClick={() => handleTransition(stage)}
+              >
+                {transitioning ? <Spinner className="mr-2 size-4 text-white" /> : <Check data-icon="inline-start" />}
+                {stage === "DISPUTED" ? "Mark as Disputed" : `Advance to ${STAGE_LABELS[stage]}`}
+              </Button>
+            ))}
+          </div>
+          {report && (
+             <Button variant="outline" size="sm" onClick={handleTrigger} disabled={triggering}>
+               {triggering ? <Spinner className="mr-2 size-4" /> : null}
+               Re-run Scrutiny
+             </Button>
+          )}
         </div>
       )}
     </div>

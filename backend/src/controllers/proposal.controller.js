@@ -66,7 +66,7 @@ async function getProposal(req, res) {
 // Validates the transition against the state machine before writing,
 // and stamps an audit entry either way (even on rejection would be a
 // nice-to-have, but here we log on success to keep it simple).
-async function transitionStage(req, res) {
+async function transitionProposal(req, res) {
   const { id } = req.params;
   const { to_stage } = req.body;
 
@@ -107,4 +107,48 @@ async function transitionStage(req, res) {
   res.json(updateResult.rows[0]);
 }
 
-module.exports = { createProposal, listProposals, getProposal, transitionStage };
+async function getScrutinyReport(req, res) {
+  const { id } = req.params;
+  const result = await db.query(
+    `SELECT * FROM scrutiny_reports WHERE proposal_id = $1 ORDER BY created_at DESC LIMIT 1`,
+    [id]
+  );
+  if (result.rows.length === 0) {
+    return res.status(404).json({ error: 'No scrutiny report found' });
+  }
+  res.json(result.rows[0]);
+}
+
+async function triggerScrutiny(req, res) {
+  const { id } = req.params;
+  const orchestratorUrl = process.env.AI_ORCHESTRATOR_URL || 'http://localhost:8000';
+
+  try {
+    const response = await fetch(`${orchestratorUrl}/orchestrate/${id}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return res.status(response.status).json({ error: `Orchestrator failed: ${errText}` });
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error('Trigger Scrutiny Error:', error);
+    res.status(502).json({ error: 'Failed to contact AI Orchestrator' });
+  }
+}
+
+module.exports = {
+  createProposal,
+  listProposals,
+  getProposal,
+  transitionProposal,
+  getScrutinyReport,
+  triggerScrutiny
+};
