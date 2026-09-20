@@ -8,6 +8,7 @@ import {
   FileCheck2, FileText, Flag, FolderKanban, Gavel, Globe2, LayoutDashboard,
   LogOut, Map, Menu, Mic, PanelLeft, Plus, Search, ShieldCheck, Upload,
   UserRound, Users, X, Loader2,
+  MapPin,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -263,17 +264,26 @@ function MapCard() {
       </CardHeader>
       <CardContent>
         <div
-          className="relative min-h-[310px] overflow-hidden rounded-lg bg-[#dce8e8]"
-          style={{
-            backgroundImage: "linear-gradient(30deg, transparent 48%, #b8cecc 49%, transparent 50%), linear-gradient(120deg, transparent 48%, #bfd2d0 49%, transparent 50%)",
-            backgroundSize: "88px 88px",
-          }}
+          className="relative min-h-[310px] overflow-hidden rounded-lg bg-cover bg-center"
+          style={{ backgroundImage: "url('/satellite_map.jpg')" }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_35%,rgba(13,148,136,.15),transparent_25%),radial-gradient(circle_at_70%_62%,rgba(234,179,8,.14),transparent_22%)]" />
-          <div className="absolute left-[24%] top-[28%] size-24 rotate-12 rounded-full border-4 border-emerald-500/70 bg-emerald-400/20" />
-          <div className="absolute left-[57%] top-[48%] size-32 -rotate-12 rounded-xl border-4 border-amber-500/70 bg-amber-400/20" />
-          <div className="absolute left-[68%] top-[21%] size-16 rotate-45 rounded-lg border-4 border-red-500/70 bg-red-400/20" />
-          <div className="absolute bottom-3 left-3 rounded-lg border border-white/70 bg-white/90 p-3 text-xs shadow-sm">
+          <svg className="absolute inset-0 size-full" viewBox="0 0 800 400" preserveAspectRatio="none">
+            {/* Acquired Parcel */}
+            <polygon points="120,100 240,90 280,160 170,190" fill="rgba(16, 185, 129, 0.45)" stroke="#10b981" strokeWidth="2" />
+            {/* In Progress Parcel */}
+            <polygon points="410,210 550,230 510,310 380,270" fill="rgba(245, 158, 11, 0.45)" stroke="#f59e0b" strokeWidth="2" />
+            {/* Disputed Parcel */}
+            <polygon points="580,70 710,80 690,150 600,160" fill="rgba(239, 68, 68, 0.45)" stroke="#ef4444" strokeWidth="2" />
+            {/* Simulated Restricted Zone overlay (e.g. Forest) */}
+            <polygon points="630,40 760,50 740,130 630,110" fill="url(#diagonalHatch)" stroke="#000" strokeWidth="1" opacity="0.3" />
+            <defs>
+              <pattern id="diagonalHatch" patternUnits="userSpaceOnUse" width="8" height="8">
+                <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="#000" strokeWidth="1" />
+              </pattern>
+            </defs>
+          </svg>
+
+          <div className="absolute bottom-3 left-3 rounded-lg border border-white/70 bg-white/95 p-3 text-xs shadow-sm">
             <p className="mb-2 font-medium text-slate-700">Parcel status</p>
             <div className="flex flex-wrap gap-3">
               <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-emerald-500" />Acquired</span>
@@ -281,7 +291,7 @@ function MapCard() {
               <span className="flex items-center gap-1.5"><i className="size-2 rounded-full bg-red-500" />Disputed</span>
             </div>
           </div>
-          <p className="absolute right-3 top-3 rounded-md bg-white/80 px-2 py-1 text-[10px] text-slate-500">GIS Map — Leaflet integration point</p>
+          <p className="absolute right-3 top-3 rounded-md bg-white/90 px-2 py-1 text-[10px] text-slate-700 shadow-sm">Realistic Satellite GIS Render</p>
         </div>
       </CardContent>
     </Card>
@@ -537,31 +547,37 @@ function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2"><Gavel className="size-4 text-teal-700" /> Legal Scrutinizer</span>
-                <Status>{report.report_data.legal_result.status}</Status>
+                <Status>{report.legal_result.status}</Status>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-slate-600">
-              <p className={`mb-2 font-medium ${report.report_data.legal_result.status === 'PASS' ? 'text-emerald-700' : 'text-red-700'}`}>
-                {report.report_data.legal_result.status === 'PASS' ? 'Passed — Verification complete' : 'Flagged — Discrepancies found'}
+              <p className={`mb-2 font-medium ${report.legal_result.status === 'PASS' ? 'text-emerald-700' : 'text-red-700'}`}>
+                {report.legal_result.status === 'PASS' ? 'Passed — Verification complete' : 'Flagged — Discrepancies found'}
               </p>
-              <p>{report.report_data.legal_result.details}</p>
+              {report.legal_result.flags && report.legal_result.flags.length > 0 ? (
+                <ul className="flex flex-col gap-1 mt-2">
+                  {report.legal_result.flags.map((f: string, i: number) => <li key={i}>• {f}</li>)}
+                </ul>
+              ) : (
+                <p>{report.legal_result.details}</p>
+              )}
             </CardContent>
           </Card>
           <Card className="shadow-none">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2"><Map className="size-4 text-teal-700" /> Geospatial Analyzer</span>
-                <Status>{report.report_data.geospatial_result.status}</Status>
+                <Status>{report.geospatial_result.status}</Status>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-slate-600">
-              <p className={`mb-2 font-medium ${report.report_data.geospatial_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
-                {report.report_data.geospatial_result.summary}
+              <p className={`mb-2 font-medium ${report.geospatial_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {report.geospatial_result.reason || report.geospatial_result.summary}
               </p>
-              {report.report_data.geospatial_result.overlaps.length > 0 && (
+              {report.geospatial_result.overlapping_parcels && report.geospatial_result.overlapping_parcels.length > 0 && (
                 <ul className="flex flex-col gap-1 mt-2">
-                  {report.report_data.geospatial_result.overlaps.map((o: any, i: number) => (
-                    <li key={i}>• {o.zone} overlap on Parcel {o.parcel}</li>
+                  {report.geospatial_result.overlapping_parcels.map((o: any, i: number) => (
+                    <li key={i}>• {o.zone_name} overlap on Parcel {o.parcel_id || 'Unknown'}</li>
                   ))}
                 </ul>
               )}
@@ -571,15 +587,15 @@ function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-sm">
                 <span className="flex items-center gap-2"><Users className="size-4 text-teal-700" /> R&amp;R Calculator</span>
-                <Status>{report.report_data.rr_result.status}</Status>
+                <Status>{report.rr_result.status}</Status>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-slate-600">
-              <p className={`mb-2 font-medium ${report.report_data.rr_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
-                {report.report_data.rr_result.summary}
+              <p className={`mb-2 font-medium ${report.rr_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
+                {report.rr_result.policy_notes || report.rr_result.summary}
               </p>
               <div className="flex flex-col gap-2 mt-2">
-                <div className="flex justify-between"><span>Est. Total Compensation</span><b className="text-emerald-700 font-mono">₹{report.report_data.rr_result.total_compensation.toLocaleString('en-IN')}</b></div>
+                <div className="flex justify-between"><span>Est. Total Compensation</span><b className="text-emerald-700 font-mono">₹{(report.rr_result.total_proposal_compensation || 0).toLocaleString('en-IN')}</b></div>
               </div>
             </CardContent>
           </Card>
@@ -620,6 +636,94 @@ function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition
 }
 
 // ═══════════════════════════════════════════════════════════════
+// REQUIRING BODY PANEL — shown inside Workbench for uploading docs
+// ═══════════════════════════════════════════════════════════════
+function RequiringBodyPanel({ proposal }: { proposal: Proposal }) {
+  const [file, setFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState("")
+
+  const [parcelForm, setParcelForm] = useState({ owner_name: "", claimed_area: "", geojson: "" })
+  const [submittingParcel, setSubmittingParcel] = useState(false)
+  const [parcelStatus, setParcelStatus] = useState("")
+
+  async function handleUpload() {
+    if (!file) return
+    setUploading(true)
+    setUploadStatus("")
+    try {
+      await api.upload("/documents", file, { proposal_id: proposal.id, doc_type: "TITLE_DEED" })
+      setUploadStatus("Title Deed uploaded successfully!")
+      setFile(null)
+    } catch (err: any) {
+      setUploadStatus(err.message || "Upload failed")
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleParcelSubmit() {
+    if (!parcelForm.geojson || !parcelForm.owner_name) return
+    setSubmittingParcel(true)
+    setParcelStatus("")
+    try {
+      const geojsonObj = JSON.parse(parcelForm.geojson)
+      await api.post("/parcels", {
+        proposal_id: proposal.id,
+        owner_name: parcelForm.owner_name,
+        claimed_area_sqm: parcelForm.claimed_area ? parseFloat(parcelForm.claimed_area) : null,
+        geojson_polygon: geojsonObj
+      })
+      setParcelStatus("Parcel boundary submitted successfully!")
+      setParcelForm({ owner_name: "", claimed_area: "", geojson: "" })
+    } catch (err: any) {
+      setParcelStatus(err.message || "Failed to submit parcel. Ensure valid GeoJSON.")
+    } finally {
+      setSubmittingParcel(false)
+    }
+  }
+
+  return (
+    <div className="grid gap-3 border-t border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-2">
+      <Card className="shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm"><FileText className="size-4 text-teal-700" /> Upload Statutory Document</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="text-xs text-slate-500">Upload the Title Deed for AI Scrutiny.</div>
+          <Input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <Button onClick={handleUpload} disabled={!file || uploading} className="w-full bg-[#0b5664] hover:bg-[#083f4a]">
+            {uploading ? <Spinner className="mr-2 size-4 text-white" /> : <Upload className="mr-2 size-4" />} Upload Title Deed
+          </Button>
+          {uploadStatus && <p className={`text-xs ${uploadStatus.includes('success') ? 'text-emerald-700' : 'text-red-700'}`}>{uploadStatus}</p>}
+        </CardContent>
+      </Card>
+      <Card className="shadow-none">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-sm"><MapPin className="size-4 text-teal-700" /> Submit Parcel Boundary (GPS)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="Owner Name" value={parcelForm.owner_name} onChange={(e) => setParcelForm({ ...parcelForm, owner_name: e.target.value })} />
+            <Input type="number" placeholder="Area (sqm)" value={parcelForm.claimed_area} onChange={(e) => setParcelForm({ ...parcelForm, claimed_area: e.target.value })} />
+          </div>
+          <Textarea 
+            placeholder='Paste GeoJSON Polygon (e.g. { "type": "Polygon", "coordinates": [...] })' 
+            className="h-24 font-mono text-xs" 
+            value={parcelForm.geojson} 
+            onChange={(e) => setParcelForm({ ...parcelForm, geojson: e.target.value })} 
+          />
+          <Button onClick={handleParcelSubmit} disabled={!parcelForm.geojson || !parcelForm.owner_name || submittingParcel} className="w-full bg-[#0b5664] hover:bg-[#083f4a]">
+            {submittingParcel ? <Spinner className="mr-2 size-4 text-white" /> : <MapPin className="mr-2 size-4" />} Submit Parcel
+          </Button>
+          {parcelStatus && <p className={`text-xs ${parcelStatus.includes('success') ? 'text-emerald-700' : 'text-red-700'}`}>{parcelStatus}</p>}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // WORKBENCH — CALA's view of proposals needing review
 // ═══════════════════════════════════════════════════════════════
 function Workbench() {
@@ -647,8 +751,8 @@ function Workbench() {
     <>
       <PageHeading
         eyebrow={roleLabel}
-        title="CALA Workbench"
-        description="Review proposals, scrutiny findings, and statutory compliance before approval."
+        title={user?.role === 'REQUIRING_BODY' ? "Documents & Parcels" : "CALA Workbench"}
+        description={user?.role === 'REQUIRING_BODY' ? "Submit acquisition documents and GPS boundaries." : "Review proposals, scrutiny findings, and statutory compliance before approval."}
         action={<Button variant="outline"><Search data-icon="inline-start" /> Search proposals</Button>}
       />
       <Card className="border-slate-200 shadow-none">
@@ -687,7 +791,11 @@ function Workbench() {
                     {open === p.id ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <Scrutiny proposal={p} onTransition={fetchProposals} />
+                    {user?.role === 'REQUIRING_BODY' ? (
+                      <RequiringBodyPanel proposal={p} />
+                    ) : (
+                      <Scrutiny proposal={p} onTransition={fetchProposals} />
+                    )}
                   </CollapsibleContent>
                 </div>
               </Collapsible>

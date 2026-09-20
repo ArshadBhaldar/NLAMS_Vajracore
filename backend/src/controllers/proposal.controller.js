@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const { recordAudit } = require('../services/audit.service');
-const { assertValidTransition, TRANSITION_ROLE } = require('../utils/stateMachine');
+const { assertValidTransition } = require('../utils/stateMachine');
 
 // Requiring Body creates a new proposal (always starts at DRAFT)
 async function createProposal(req, res) {
@@ -110,7 +110,7 @@ async function transitionProposal(req, res) {
 async function getScrutinyReport(req, res) {
   const { id } = req.params;
   const result = await db.query(
-    `SELECT * FROM scrutiny_reports WHERE proposal_id = $1 ORDER BY created_at DESC LIMIT 1`,
+    `SELECT * FROM scrutiny_reports WHERE proposal_id = $1 ORDER BY generated_at DESC LIMIT 1`,
     [id]
   );
   if (result.rows.length === 0) {
@@ -128,7 +128,8 @@ async function triggerScrutiny(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({})
     });
 
     if (!response.ok) {

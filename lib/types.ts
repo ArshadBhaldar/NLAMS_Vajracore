@@ -150,27 +150,27 @@ export interface Objection {
 export interface ScrutinyReport {
   id?: string
   proposal_id: string
-  agent_name: string
-  status: 'PASS' | 'FLAGGED'
-  report_data: {
-    overall_status: 'PASS' | 'FLAGGED'
-    legal_result: {
-      status: 'PASS' | 'FLAGGED'
-      details: string
-    }
-    geospatial_result: {
-      status: 'PASS' | 'FLAGGED'
-      summary: string
-      overlaps: any[]
-    }
-    rr_result: {
-      status: 'PASS' | 'FLAGGED'
-      summary: string
-      total_compensation: number
-      breakdown: any[]
-    }
+  overall_status: 'PASS' | 'FLAGGED'
+  legal_result: {
+    status: 'PASS' | 'FLAGGED'
+    flags?: string[]
+    details?: string
   }
-  created_at: string
+  geospatial_result: {
+    status: 'PASS' | 'FLAGGED'
+    reason?: string
+    summary?: string
+    overlapping_parcels?: any[]
+    overlaps?: any[]
+  }
+  rr_result: {
+    status: 'PASS' | 'FLAGGED'
+    policy_notes?: string
+    summary?: string
+    total_proposal_compensation?: number
+    parcel_breakdown?: any[]
+  }
+  generated_at: string
 }
 
 export interface DocumentRecord {

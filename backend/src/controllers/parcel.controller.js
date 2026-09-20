@@ -4,7 +4,7 @@ const { recordAudit } = require('../services/audit.service');
 // Expects geojson_polygon as a GeoJSON Polygon object, e.g.:
 // { "type": "Polygon", "coordinates": [[[lng,lat],[lng,lat],...]] }
 async function createParcel(req, res) {
-  const { proposal_id, ulpin, owner_name, claimed_area_sqm, geojson_polygon } = req.body;
+  const { proposal_id, ulpin, owner_name, claimed_area_sqm, citizen_id, geojson_polygon } = req.body;
 
   if (!proposal_id || !geojson_polygon) {
     return res.status(400).json({ error: 'proposal_id and geojson_polygon are required' });
@@ -22,13 +22,14 @@ async function createParcel(req, res) {
   const hasOverlap = overlapResult.rows.length > 0;
 
   const insertResult = await db.query(
-    `INSERT INTO parcels (proposal_id, ulpin, owner_name, claimed_area_sqm, geom, restricted_zone_overlap, overlap_details)
-     VALUES ($1, $2, $3, $4, ST_GeomFromGeoJSON($5)::geography, $6, $7) RETURNING *`,
+    `INSERT INTO parcels (proposal_id, ulpin, owner_name, claimed_area_sqm, citizen_id, geom, restricted_zone_overlap, overlap_details)
+     VALUES ($1, $2, $3, $4, $5, ST_GeomFromGeoJSON($6)::geography, $7, $8) RETURNING *`,
     [
       proposal_id,
       ulpin || null,
       owner_name || null,
       claimed_area_sqm || null,
+      citizen_id || null,
       JSON.stringify(geojson_polygon),
       hasOverlap,
       hasOverlap ? JSON.stringify(overlapResult.rows) : null,

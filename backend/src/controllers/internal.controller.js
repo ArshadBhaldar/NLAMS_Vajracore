@@ -46,7 +46,7 @@ async function downloadDocument(req, res) {
 
   try {
     const result = await db.query(
-      `SELECT storage_path FROM documents WHERE id = $1`,
+      `SELECT storage_path, filename FROM documents WHERE id = $1`,
       [document_id]
     );
 
@@ -54,10 +54,10 @@ async function downloadDocument(req, res) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    const { storage_path } = result.rows[0];
+    const { storage_path, filename } = result.rows[0];
     const absolutePath = path.resolve(storage_path);
     
-    res.download(absolutePath);
+    res.download(absolutePath, filename);
   } catch (error) {
     console.error('Error downloading document:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -66,17 +66,14 @@ async function downloadDocument(req, res) {
 
 async function saveScrutinyReport(req, res) {
   const { proposal_id } = req.params;
-  const report = req.body;
+  const { legal_result, geospatial_result, rr_result, overall_status = 'PENDING' } = req.body;
 
   try {
-    // Upsert the scrutiny report (one per proposal for the overall orchestration)
-    // Actually, schema.sql has: id, proposal_id, agent_name, status, report_data, created_at
-    // But the python orchestrator sends the overall combined report. Let's use agent_name = 'ORCHESTRATOR'
     const result = await db.query(
-      `INSERT INTO scrutiny_reports (proposal_id, agent_name, status, report_data)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO scrutiny_reports (proposal_id, legal_result, geospatial_result, rr_result, overall_status)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [proposal_id, 'ORCHESTRATOR', report.overall_status, report]
+      [proposal_id, legal_result, geospatial_result, rr_result, overall_status]
     );
 
     res.status(201).json(result.rows[0]);
