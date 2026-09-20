@@ -88,35 +88,50 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
 
-          {/* Demo credentials hint */}
-          <div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
-            <p className="mb-2 text-xs font-semibold text-teal-300">
-              Demo accounts
-            </p>
-            <div className="flex flex-col gap-1.5 text-xs text-slate-400">
-              <span>
-                <strong className="text-slate-300">State Monitor:</strong>{" "}
-                monitor@demo.gov.in
-              </span>
-              <span>
-                <strong className="text-slate-300">Requiring Body:</strong>{" "}
-                nhai@demo.gov.in
-              </span>
-              <span>
-                <strong className="text-slate-300">CALA / Collector:</strong>{" "}
-                cala.pune@demo.gov.in
-              </span>
-              <span>
-                <strong className="text-slate-300">Field Surveyor:</strong>{" "}
-                surveyor.anita@demo.gov.in
-              </span>
-              <span>
-                <strong className="text-slate-300">Citizen:</strong>{" "}
-                ganesh.patil@demo.gov.in
-              </span>
-              <span className="mt-1 text-teal-400/80">
-                Password for all: <code>Demo@1234</code>
-              </span>
+          {/* 1-Click Demo accounts */}
+          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-teal-300">
+                1-Click Demo Login
+              </p>
+              <span className="text-[11px] text-slate-400">Password: <code>Demo@1234</code></span>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {[
+                { role: "Requiring Body", email: "nhai@demo.gov.in", label: "NHAI Portal", icon: "🏗️" },
+                { role: "CALA (Collector)", email: "cala.pune@demo.gov.in", label: "District CALA", icon: "⚖️" },
+                { role: "Citizen", email: "ganesh.patil@demo.gov.in", label: "Ganesh Patil", icon: "🧑‍🌾" },
+                { role: "State Monitor", email: "monitor@demo.gov.in", label: "National Oversight", icon: "📈" },
+                { role: "Field Surveyor", email: "surveyor.anita@demo.gov.in", label: "Field Survey", icon: "📷", fullWidth: true },
+              ].map((item) => (
+                <button
+                  key={item.email}
+                  type="button"
+                  disabled={loading}
+                  onClick={async () => {
+                    setEmail(item.email)
+                    setPassword("Demo@1234")
+                    setError("")
+                    setLoading(true)
+                    try {
+                      await login(item.email, "Demo@1234")
+                    } catch (err: any) {
+                      setError(err.message || "Login failed")
+                    } finally {
+                      setLoading(false)
+                    }
+                  }}
+                  className={`flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition-all hover:border-teal-400/50 hover:bg-white/10 ${
+                    item.fullWidth ? "sm:col-span-2" : ""
+                  }`}
+                >
+                  <span className="text-base">{item.icon}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-medium text-white">{item.role}</p>
+                    <p className="truncate text-[10px] text-slate-400">{item.label}</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </form>

@@ -40,7 +40,8 @@ async function listMyObjections(req, res) {
 // CALA resolves (or rejects) an objection within their district.
 async function resolveObjection(req, res) {
   const { id } = req.params;
-  const { status, resolution_notes } = req.body; // status: 'RESOLVED' | 'REJECTED'
+  let { status, resolution_notes } = req.body;
+  if (!status) status = 'RESOLVED';
 
   if (!['RESOLVED', 'REJECTED'].includes(status)) {
     return res.status(400).json({ error: "status must be 'RESOLVED' or 'REJECTED'" });
