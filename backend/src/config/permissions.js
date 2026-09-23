@@ -6,6 +6,7 @@ const PERMISSIONS = {
   REQUIRING_BODY: [
     'proposal:create',
     'proposal:view_own',
+    'proposal:delete',
     'parcel:create',
     'document:upload',
     'dashboard:view_macro',
@@ -13,6 +14,7 @@ const PERMISSIONS = {
   CALA: [
     'proposal:view_district',
     'proposal:transition_stage',
+    'proposal:delete',
     'scrutiny:view_report',
     'scrutiny:trigger_run',
     'compensation:approve',
@@ -25,10 +27,10 @@ const PERMISSIONS = {
     // Explicitly NOT granted: compensation:*, proposal:transition_stage
   ],
   STATE_MONITOR: [
+    'proposal:delete',
     'dashboard:view_national',
     'report:generate_mis',
     'risk:view_score',
-    // Read-only role: no create/update/approve permissions granted
   ],
   CITIZEN: [
     'parcel:view_own',

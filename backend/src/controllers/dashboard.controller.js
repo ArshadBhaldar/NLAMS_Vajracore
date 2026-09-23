@@ -7,23 +7,30 @@ const db = require('../config/db');
 // STATE_MONITOR, and filterable via query params for both.
 async function getDashboardSummary(req, res) {
   const { role, district: userDistrict } = req.user;
-  const { district: filterDistrict, state: filterState } = req.query;
+  const { district: filterDistrict, state: filterState, projectId: filterProjectId } = req.query;
 
   const params = [];
   const conditions = [];
 
-  // CALA is hard-scoped to their own district regardless of query params
+  // Scoping: respect explicit district filter; for CALA, allow seeing all demo proposals unless filtered
   if (role === 'CALA') {
-    conditions.push(`p.district = $${params.length + 1}`);
-    params.push(userDistrict);
-  } else if (filterDistrict) {
+    if (filterDistrict && filterDistrict !== 'all') {
+      conditions.push(`p.district = $${params.length + 1}`);
+      params.push(filterDistrict);
+    }
+  } else if (filterDistrict && filterDistrict !== 'all') {
     conditions.push(`p.district = $${params.length + 1}`);
     params.push(filterDistrict);
   }
 
-  if (filterState) {
+  if (filterState && filterState !== 'all') {
     conditions.push(`p.state = $${params.length + 1}`);
     params.push(filterState);
+  }
+
+  if (filterProjectId && filterProjectId !== 'all') {
+    conditions.push(`p.id = $${params.length + 1}`);
+    params.push(filterProjectId);
   }
 
   const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';

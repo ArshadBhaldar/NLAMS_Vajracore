@@ -10,10 +10,13 @@ async function createProposal(req, res) {
     return res.status(400).json({ error: 'project_name, district, state, area_hectares are required' });
   }
 
+  // In demo environment, automatically assign to default CALA (Rohan Deshmukh) if not specified
+  const effectiveCalaId = assigned_cala_id || '22222222-2222-2222-2222-222222222222';
+
   const result = await db.query(
     `INSERT INTO proposals (project_name, requiring_body_id, district, state, area_hectares, justification, assigned_cala_id)
      VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [project_name, req.user.id, district, state, area_hectares, justification || null, assigned_cala_id || null]
+    [project_name, req.user.id, district, state, area_hectares, justification || null, effectiveCalaId]
   );
 
   const proposal = result.rows[0];
@@ -31,23 +34,42 @@ async function createProposal(req, res) {
 
 // List proposals, scoped by role:
 // - REQUIRING_BODY sees only its own submissions
-// - CALA sees only its assigned district
+// - CALA sees assigned district / assigned proposals (and all demo scenarios for demo CALA)
 // - STATE_MONITOR sees everything (read-only, national)
 // - CITIZEN / FIELD_SURVEYOR use dedicated narrower endpoints, not this one
 async function listProposals(req, res) {
-  const { role, id: userId, district } = req.user;
-  let query = 'SELECT * FROM proposals';
+  const { role, id: userId, district: userDistrict, email: userEmail } = req.user;
+  const { state: filterState, district: filterDistrict } = req.query;
+
   const params = [];
+  const conditions = [];
 
   if (role === 'REQUIRING_BODY') {
-    query += ' WHERE requiring_body_id = $1';
+    conditions.push(`requiring_body_id = $${params.length + 1}`);
     params.push(userId);
   } else if (role === 'CALA') {
-    query += ' WHERE district = $1';
-    params.push(district);
+    if (filterDistrict && filterDistrict !== 'all') {
+      conditions.push(`district = $${params.length + 1}`);
+      params.push(filterDistrict);
+    } else if (userDistrict && userDistrict !== 'Pune' && userDistrict !== 'All') {
+      conditions.push(`(district = $${params.length + 1} OR assigned_cala_id = $${params.length + 2})`);
+      params.push(userDistrict, userId);
+    }
+    // Demo CALA (cala.pune@demo.gov.in) has jurisdiction over all demo scenarios
+  } else if (filterDistrict && filterDistrict !== 'all') {
+    conditions.push(`district = $${params.length + 1}`);
+    params.push(filterDistrict);
   }
-  // STATE_MONITOR: no filter, sees all (dashboard is national)
 
+  if (filterState && filterState !== 'all') {
+    conditions.push(`state = $${params.length + 1}`);
+    params.push(filterState);
+  }
+
+  let query = 'SELECT * FROM proposals';
+  if (conditions.length) {
+    query += ` WHERE ${conditions.join(' AND ')}`;
+  }
   query += ' ORDER BY updated_at DESC';
 
   const result = await db.query(query, params);
@@ -81,7 +103,13 @@ async function transitionProposal(req, res) {
     return res.status(404).json({ error: 'Proposal not found' });
   }
 
-  if (proposal.district !== req.user.district) {
+  // Check CALA jurisdiction:
+  // In demo / multi-scenario environment, allow CALA to transition proposals across all demo projects.
+  // In production, enforce jurisdiction if not a demo CALA and not assigned to this proposal.
+  const isDemoCala = req.user.email === 'cala.pune@demo.gov.in' || !req.user.district || req.user.district === 'All';
+  const isAssigned = proposal.assigned_cala_id === req.user.id || proposal.district === req.user.district;
+
+  if (!isDemoCala && !isAssigned) {
     return res.status(403).json({ error: 'Forbidden: outside your assigned district' });
   }
 
@@ -145,11 +173,69 @@ async function triggerScrutiny(req, res) {
   }
 }
 
+// Atomically delete a project proposal and all its cascading records
+async function deleteProposal(req, res) {
+  const { id } = req.params;
+  const { role, id: userId, district: userDistrict, email: userEmail } = req.user;
+
+  const result = await db.query('SELECT * FROM proposals WHERE id = $1', [id]);
+  const proposal = result.rows[0];
+
+  if (!proposal) {
+    return res.status(404).json({ error: 'Proposal not found' });
+  }
+
+  // Authorization check:
+  // - REQUIRING_BODY can delete their own submitted proposals
+  // - CALA can delete proposals assigned to them, in their district, or demo proposals
+  // - STATE_MONITOR can delete any proposal (admin role)
+  if (role === 'REQUIRING_BODY' && proposal.requiring_body_id !== userId) {
+    return res.status(403).json({ error: 'Forbidden: you can only delete your own submitted proposals' });
+  }
+
+  if (role === 'CALA') {
+    const isDemoCala = userEmail === 'cala.pune@demo.gov.in' || !userDistrict || userDistrict === 'All';
+    const isAssigned = proposal.assigned_cala_id === userId || proposal.district === userDistrict;
+    if (!isDemoCala && !isAssigned) {
+      return res.status(403).json({ error: 'Forbidden: outside your assigned district' });
+    }
+  }
+
+  const client = await db.getClient();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM compensation WHERE proposal_id = $1', [id]);
+    await client.query('DELETE FROM objections WHERE proposal_id = $1', [id]);
+    await client.query('DELETE FROM scrutiny_reports WHERE proposal_id = $1', [id]);
+    await client.query('DELETE FROM documents WHERE proposal_id = $1', [id]);
+    await client.query('DELETE FROM parcels WHERE proposal_id = $1', [id]);
+    await client.query('DELETE FROM proposals WHERE id = $1', [id]);
+
+    await recordAudit({
+      entityType: 'PROPOSAL',
+      entityId: id,
+      action: 'DELETE',
+      user: req.user,
+      details: { project_name: proposal.project_name, district: proposal.district, state: proposal.state },
+    });
+
+    await client.query('COMMIT');
+    res.json({ message: 'Project proposal deleted successfully', id, project_name: proposal.project_name });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Delete proposal error:', err);
+    res.status(500).json({ error: 'Failed to delete project proposal' });
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   createProposal,
   listProposals,
   getProposal,
   transitionProposal,
   getScrutinyReport,
-  triggerScrutiny
+  triggerScrutiny,
+  deleteProposal,
 };

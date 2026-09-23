@@ -1381,40 +1381,77 @@ function riskBand(score: number | null): string {
 }
 
 // ─── CSV Report Downloader ────────────────────────────────────
-function downloadCsvReport(proposals: Proposal[], summary: DashboardSummary | null) {
+function downloadCsvReport(
+  proposals: Proposal[],
+  summary: DashboardSummary | null,
+  activeFilters?: { state: string; district: string; project: string }
+) {
+  const scopeDesc = [
+    activeFilters?.state && activeFilters.state !== "all" ? `State: ${activeFilters.state}` : "All States",
+    activeFilters?.district && activeFilters.district !== "all" ? `District: ${activeFilters.district}` : "All Districts",
+    activeFilters?.project && activeFilters.project !== "all" ? `Project: ${activeFilters.project}` : "All Projects",
+  ].join(" | ")
+
   const rows = [
     ["National Land Acquisition & Management System (NLAMS 2.0) - Executive MIS Report"],
-    [`Generated: ${new Date().toLocaleString("en-IN")}`],
+    [`Generated On: ${new Date().toLocaleString("en-IN")}`],
+    [`Filter Scope: ${scopeDesc}`],
     [],
-    ["Key Performance Indicators"],
-    ["Total Proposals", summary?.total_proposals || 0],
-    ["Area Notified (ha)", summary?.area_notified_hectares || 0],
-    ["Area Acquired (ha)", summary?.area_acquired_hectares || 0],
-    ["Compensation Assessed (INR)", summary?.compensation_assessed || 0],
-    ["Compensation Paid (INR)", summary?.compensation_paid || 0],
-    ["R&R Completion (%)", `${summary?.rr_completion_pct || 0}%`],
-    ["Active Disputes", summary?.disputed_count || 0],
+    ["Key Performance Indicators (Aggregated Status)"],
+    ["Total Projects Monitored", summary?.total_proposals || 0],
+    ["Total Area Notified (ha)", summary?.area_notified_hectares || 0],
+    ["Total Area Acquired (ha)", summary?.area_acquired_hectares || 0],
+    [
+      "Acquisition Progress (%)",
+      `${summary && summary.area_notified_hectares > 0 ? ((summary.area_acquired_hectares / summary.area_notified_hectares) * 100).toFixed(1) : 0}%`,
+    ],
+    ["Total Compensation Assessed (INR)", summary?.compensation_assessed || 0],
+    ["Total Compensation Paid (INR)", summary?.compensation_paid || 0],
+    ["R&R Completion Rate (%)", `${summary?.rr_completion_pct || 0}%`],
+    ["Displaced Families / Beneficiaries", summary?.families_displaced || 0],
+    ["Active Dispute Cases", summary?.disputed_count || 0],
+    ["Possession Orders Issued", summary?.possession_count || 0],
     [],
-    ["Active Projects List"],
-    ["Project Name", "State", "District", "Area (ha)", "Stage", "Litigation Risk", "Last Updated"],
+    ["Active Land Acquisition Projects Schedule"],
+    [
+      "Project ID",
+      "Project Name",
+      "State",
+      "District",
+      "Notified Area (ha)",
+      "Statutory Stage",
+      "Litigation Risk Band",
+      "Litigation Risk Score",
+      "Public Purpose Justification",
+      "Last Activity Date",
+    ],
     ...proposals.map((p) => [
-      `"${p.project_name.replace(/"/g, '""')}"`,
-      p.state,
-      p.district,
-      p.area_hectares,
-      STAGE_LABELS[p.stage] || p.stage,
-      p.litigation_risk_band || "Low",
-      new Date(p.updated_at).toLocaleDateString("en-IN"),
+      `"${(p.id || "").replace(/"/g, '""')}"`,
+      `"${(p.project_name || "").replace(/"/g, '""')}"`,
+      `"${(p.state || "").replace(/"/g, '""')}"`,
+      `"${(p.district || "").replace(/"/g, '""')}"`,
+      p.area_hectares || 0,
+      `"${STAGE_LABELS[p.stage] || p.stage}"`,
+      `"${p.litigation_risk_band || "Low"}"`,
+      p.litigation_risk_score !== null && p.litigation_risk_score !== undefined ? p.litigation_risk_score : "N/A",
+      `"${(p.justification || "").replace(/"/g, '""')}"`,
+      p.updated_at ? new Date(p.updated_at).toLocaleDateString("en-IN") : "N/A",
     ]),
   ]
-  const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => (Array.isArray(e) ? e.join(",") : e)).join("\n")
-  const encodedUri = encodeURI(csvContent)
+
+  const csvContent = rows
+    .map((row) => (Array.isArray(row) ? row.join(",") : row))
+    .join("\r\n")
+
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" })
+  const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
-  link.setAttribute("href", encodedUri)
-  link.setAttribute("download", `NLAMS_Acquisition_MIS_Report_${new Date().toISOString().slice(0, 10)}.csv`)
+  link.setAttribute("href", url)
+  link.setAttribute("download", `NLAMS_Executive_MIS_Report_${new Date().toISOString().slice(0, 10)}.csv`)
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1427,33 +1464,100 @@ function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [filterState, setFilterState] = useState("all")
   const [filterDistrict, setFilterDistrict] = useState("all")
+  const [filterProject, setFilterProject] = useState("all")
+  const [downloadSuccess, setDownloadSuccess] = useState(false)
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
+  // Fetch proposals list on mount
+  useEffect(() => {
+    api.get<Proposal[]>("/proposals")
+      .then((p) => setProposals(p))
+      .catch((err) => console.error("Proposals fetch error:", err))
+  }, [])
+
+  // Fetch KPI summary whenever filters change
+  const fetchSummary = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (filterState !== "all") params.set("state", filterState)
       if (filterDistrict !== "all") params.set("district", filterDistrict)
+      if (filterProject !== "all") params.set("projectId", filterProject)
       const qs = params.toString() ? `?${params}` : ""
 
-      const [s, p] = await Promise.all([
-        api.get<DashboardSummary>(`/dashboard/summary${qs}`),
-        api.get<Proposal[]>("/proposals"),
-      ])
+      const s = await api.get<DashboardSummary>(`/dashboard/summary${qs}`)
       setSummary(s)
-      setProposals(p)
     } catch (err) {
-      console.error("Dashboard fetch error:", err)
+      console.error("Dashboard summary fetch error:", err)
     } finally {
       setLoading(false)
     }
-  }, [filterState, filterDistrict])
+  }, [filterState, filterDistrict, filterProject])
 
-  useEffect(() => { fetchData() }, [fetchData])
+  useEffect(() => {
+    fetchSummary()
+  }, [fetchSummary])
 
-  // Extract unique states/districts for filter dropdowns
+  // Extract unique states from all proposals
   const states = [...new Set(proposals.map((p) => p.state))].sort()
-  const districts = [...new Set(proposals.map((p) => p.district))].sort()
+
+  // Extract available districts matching selected state
+  const availableDistricts = [...new Set(
+    proposals
+      .filter((p) => filterState === "all" || p.state === filterState)
+      .map((p) => p.district)
+  )].sort()
+
+  // Extract available projects matching state & district
+  const availableProjects = proposals.filter((p) => {
+    if (filterState !== "all" && p.state !== filterState) return false
+    if (filterDistrict !== "all" && p.district !== filterDistrict) return false
+    return true
+  })
+
+  // Filter proposals for table and report
+  const filteredProposals = proposals.filter((p) => {
+    if (filterState !== "all" && p.state !== filterState) return false
+    if (filterDistrict !== "all" && p.district !== filterDistrict) return false
+    if (filterProject !== "all" && p.id !== filterProject) return false
+    return true
+  })
+
+  const hasActiveFilters = filterState !== "all" || filterDistrict !== "all" || filterProject !== "all"
+
+  function handleStateChange(newState: string | null) {
+    setFilterState(newState || "all")
+    setFilterDistrict("all")
+    setFilterProject("all")
+  }
+
+  function handleDistrictChange(newDistrict: string | null) {
+    setFilterDistrict(newDistrict || "all")
+    setFilterProject("all")
+  }
+
+  function handleProjectChange(newProject: string | null) {
+    setFilterProject(newProject || "all")
+  }
+
+  function handleClearFilters() {
+    setFilterState("all")
+    setFilterDistrict("all")
+    setFilterProject("all")
+  }
+
+  function handleDownloadReport() {
+    try {
+      const selectedProjectObj = proposals.find((p) => p.id === filterProject)
+      downloadCsvReport(filteredProposals, summary, {
+        state: filterState,
+        district: filterDistrict,
+        project: selectedProjectObj ? selectedProjectObj.project_name : filterProject,
+      })
+      setDownloadSuccess(true)
+      setTimeout(() => setDownloadSuccess(false), 2500)
+    } catch (err) {
+      console.error("MIS report download error:", err)
+    }
+  }
 
   const roleLabel = user ? ROLE_LABELS[user.role] : "Overview"
 
@@ -1461,66 +1565,173 @@ function Dashboard() {
     return (
       <>
         <PageHeading eyebrow={`${roleLabel} / Overview`} title="National Dashboard" description="Loading..." />
-        <div className="flex items-center justify-center py-20"><Spinner className="size-8 text-teal-700" /></div>
+        <div className="flex items-center justify-center py-20">
+          <Spinner className="size-8 text-teal-700" />
+        </div>
       </>
     )
   }
 
-  const compPct = summary.compensation_assessed > 0
-    ? Math.round((summary.compensation_paid / summary.compensation_assessed) * 100)
-    : 0
+  const compPct =
+    summary.compensation_assessed > 0
+      ? Math.round((summary.compensation_paid / summary.compensation_assessed) * 100)
+      : 0
 
   return (
     <>
       <PageHeading
         eyebrow={`${roleLabel} / Overview`}
         title="National Dashboard"
-        description="A consolidated view of land acquisition progress and compliance."
+        description="A consolidated view of land acquisition progress, statutory milestones, and compliance."
         action={
           <Button
-            className="bg-[#0b5664] hover:bg-[#083f4a]"
-            onClick={() => downloadCsvReport(proposals, summary)}
+            className={`transition-all duration-200 ${
+              downloadSuccess
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "bg-[#0b5664] hover:bg-[#083f4a]"
+            }`}
+            onClick={handleDownloadReport}
           >
-            <Download className="mr-2 size-4" /> Download MIS report
+            {downloadSuccess ? (
+              <>
+                <CheckCircle2 className="mr-2 size-4 text-emerald-200 animate-in zoom-in-50" />
+                MIS Report Downloaded!
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 size-4" /> Download MIS report
+              </>
+            )}
           </Button>
         }
       />
 
-      {/* Filters */}
-      <div className="mb-5 grid gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-3">
-        <Select value={filterState} onValueChange={(v) => setFilterState(v || "all")}>
-          <SelectTrigger><SelectValue placeholder="State" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All states</SelectItem>
-            {states.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterDistrict} onValueChange={(v) => setFilterDistrict(v || "all")}>
-          <SelectTrigger><SelectValue placeholder="District" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All districts</SelectItem>
-            {districts.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select defaultValue="all">
-          <SelectTrigger><SelectValue placeholder="Project" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All projects</SelectItem>
-            {proposals.map((p) => <SelectItem key={p.id} value={p.id}>{p.project_name}</SelectItem>)}
-          </SelectContent>
-        </Select>
+      {/* Filters Bar */}
+      <div className="mb-5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-semibold text-slate-700">Filter Projects & KPIs</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-slate-500 font-medium">
+              Showing {filteredProposals.length} of {proposals.length} projects
+            </span>
+            {hasActiveFilters && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="h-6 px-2 text-[11px] text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+              >
+                <X className="mr-1 size-3" /> Clear filters
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          {/* State filter */}
+          <Select value={filterState} onValueChange={handleStateChange}>
+            <SelectTrigger className="w-full text-xs">
+              <span className="truncate">
+                {filterState === "all" ? `State: All states (${states.length})` : `State: ${filterState}`}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All states ({states.length})</SelectItem>
+              {states.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* District filter (cascades from state) */}
+          <Select value={filterDistrict} onValueChange={handleDistrictChange}>
+            <SelectTrigger className="w-full text-xs">
+              <span className="truncate">
+                {filterDistrict === "all"
+                  ? `District: All districts (${availableDistricts.length})`
+                  : `District: ${filterDistrict}`}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                All districts {filterState !== "all" ? `in ${filterState}` : ""} ({availableDistricts.length})
+              </SelectItem>
+              {availableDistricts.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Project filter (cascades from state & district) */}
+          <Select value={filterProject} onValueChange={handleProjectChange}>
+            <SelectTrigger className="w-full text-xs">
+              <span className="truncate">
+                {filterProject === "all"
+                  ? `Project: All projects (${availableProjects.length})`
+                  : availableProjects.find((p) => p.id === filterProject)?.project_name || "Selected project"}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All projects ({availableProjects.length})</SelectItem>
+              {availableProjects.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.project_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* KPIs + Map */}
       <div className="grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
         <MapCard />
         <div className="grid gap-4 sm:grid-cols-2">
-          <Kpi label="Area notified" value={fmtHectares(summary.area_notified_hectares)} note={`Across ${summary.total_proposals} active projects`} icon={Map} />
-          <Kpi label="Area acquired" value={fmtHectares(summary.area_acquired_hectares)} note={`${summary.area_notified_hectares > 0 ? ((summary.area_acquired_hectares / summary.area_notified_hectares) * 100).toFixed(1) : 0}% of notified area`} icon={Check} />
-          <Kpi label="Families displaced" value={summary.families_displaced.toLocaleString("en-IN")} note={`${summary.disputed_count} disputed`} icon={Users} />
-          <Kpi label="R&R completion" value={`${summary.rr_completion_pct}%`} note={`${summary.possession_count} in possession`} icon={ShieldCheck} />
-          <Kpi label="Proposals in dispute" value={summary.disputed_count.toString()} note="Active dispute cases" icon={Flag} />
-          <Kpi label="Compensation paid" value={fmtINR(summary.compensation_paid)} note={`of ${fmtINR(summary.compensation_assessed)} assessed`} icon={Building2}>
+          <Kpi
+            label="Area notified"
+            value={fmtHectares(summary.area_notified_hectares)}
+            note={`Across ${summary.total_proposals} active projects`}
+            icon={Map}
+          />
+          <Kpi
+            label="Area acquired"
+            value={fmtHectares(summary.area_acquired_hectares)}
+            note={`${
+              summary.area_notified_hectares > 0
+                ? ((summary.area_acquired_hectares / summary.area_notified_hectares) * 100).toFixed(1)
+                : 0
+            }% of notified area`}
+            icon={Check}
+          />
+          <Kpi
+            label="Families displaced"
+            value={summary.families_displaced.toLocaleString("en-IN")}
+            note={`${summary.disputed_count} disputed`}
+            icon={Users}
+          />
+          <Kpi
+            label="R&R completion"
+            value={`${summary.rr_completion_pct}%`}
+            note={`${summary.possession_count} in possession`}
+            icon={ShieldCheck}
+          />
+          <Kpi
+            label="Proposals in dispute"
+            value={summary.disputed_count.toString()}
+            note="Active dispute cases"
+            icon={Flag}
+          />
+          <Kpi
+            label="Compensation paid"
+            value={fmtINR(summary.compensation_paid)}
+            note={`of ${fmtINR(summary.compensation_assessed)} assessed`}
+            icon={Building2}
+          >
             <Progress value={compPct} className="mt-3 h-2" />
             <p className="mt-2 text-xs text-slate-500">{compPct}% released to beneficiaries</p>
           </Kpi>
@@ -1529,9 +1740,16 @@ function Dashboard() {
 
       {/* Projects table */}
       <Card className="mt-5 border-slate-200 shadow-none">
-        <CardHeader>
-          <CardTitle className="text-base text-[#123746]">Active projects</CardTitle>
-          <CardDescription>Projects requiring monitoring attention</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <div>
+            <CardTitle className="text-base text-[#123746]">Active Land Acquisition Projects</CardTitle>
+            <CardDescription className="text-xs">
+              Statutory progress schedule & litigation risk oversight
+            </CardDescription>
+          </div>
+          <Badge variant="outline" className="text-xs text-slate-600 border-slate-200">
+            {filteredProposals.length} project{filteredProposals.length !== 1 ? "s" : ""} listed
+          </Badge>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
@@ -1542,22 +1760,39 @@ function Dashboard() {
                 <TableHead>District</TableHead>
                 <TableHead>Land area</TableHead>
                 <TableHead>Stage</TableHead>
-                <TableHead>Risk</TableHead>
-                <TableHead className="text-right">Updated</TableHead>
+                <TableHead>Litigation Risk</TableHead>
+                <TableHead className="text-right">Last Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proposals.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-slate-400 py-8">No proposals found</TableCell></TableRow>
+              {filteredProposals.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-slate-500 py-10">
+                    <p className="font-medium text-slate-700">No projects match the selected filters</p>
+                    <p className="text-xs text-slate-400 mt-1">Try resetting the State, District, or Project filters.</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearFilters}
+                      className="mt-3 h-7 text-xs border-slate-300"
+                    >
+                      Clear all filters
+                    </Button>
+                  </TableCell>
+                </TableRow>
               ) : (
-                proposals.map((p) => (
+                filteredProposals.map((p) => (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium text-slate-700">{p.project_name}</TableCell>
+                    <TableCell className="font-medium text-slate-800">{p.project_name}</TableCell>
                     <TableCell>{p.state}</TableCell>
                     <TableCell>{p.district}</TableCell>
                     <TableCell>{fmtHectares(p.area_hectares)}</TableCell>
-                    <TableCell><Status>{STAGE_LABELS[p.stage]}</Status></TableCell>
-                    <TableCell><Status>{p.litigation_risk_band || riskBand(p.litigation_risk_score)}</Status></TableCell>
+                    <TableCell>
+                      <Status>{STAGE_LABELS[p.stage] || p.stage}</Status>
+                    </TableCell>
+                    <TableCell>
+                      <Status>{p.litigation_risk_band || riskBand(p.litigation_risk_score)}</Status>
+                    </TableCell>
                     <TableCell className="text-right text-slate-500">{fmtRelative(p.updated_at)}</TableCell>
                   </TableRow>
                 ))
@@ -1573,7 +1808,15 @@ function Dashboard() {
 // ═══════════════════════════════════════════════════════════════
 // SCRUTINY PANEL — shown inside Workbench when a proposal is expanded
 // ═══════════════════════════════════════════════════════════════
-function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition: () => void }) {
+function Scrutiny({
+  proposal,
+  onTransition,
+  onDelete,
+}: {
+  proposal: Proposal
+  onTransition: () => void
+  onDelete?: () => void
+}) {
   const { user } = useAuth()
   const [transitioning, setTransitioning] = useState(false)
   const [error, setError] = useState("")
@@ -1873,29 +2116,39 @@ function Scrutiny({ proposal, onTransition }: { proposal: Proposal; onTransition
         </div>
       )}
 
-      {user?.role === "CALA" && nextStages.length > 0 && (
-        <div className="lg:col-span-3 flex flex-wrap gap-3 items-center justify-between">
-          <div className="flex gap-3">
-            {nextStages.map((stage) => (
-              <Button
-                key={stage}
-                className="bg-[#0b5664] hover:bg-[#083f4a]"
-                disabled={transitioning || loadingReport}
-                onClick={() => handleTransition(stage)}
-              >
-                {transitioning ? <Spinner className="mr-2 size-4 text-white" /> : <Check data-icon="inline-start" />}
-                {stage === "DISPUTED" ? "Mark as Disputed" : `Advance to ${STAGE_LABELS[stage]}`}
-              </Button>
-            ))}
-          </div>
-          {report && (
-             <Button variant="outline" size="sm" onClick={handleTrigger} disabled={triggering}>
-               {triggering ? <Spinner className="mr-2 size-4" /> : null}
-               Re-run Scrutiny
-             </Button>
+      <div className="lg:col-span-3 flex flex-wrap gap-3 items-center justify-between pt-3 border-t border-slate-100">
+        <div className="flex flex-wrap gap-2">
+          {user?.role === "CALA" && nextStages.map((stage) => (
+            <Button
+              key={stage}
+              className="bg-[#0b5664] hover:bg-[#083f4a] text-xs h-8"
+              disabled={transitioning || loadingReport}
+              onClick={() => handleTransition(stage)}
+            >
+              {transitioning ? <Spinner className="mr-1.5 size-3.5 text-white" /> : <Check className="mr-1.5 size-3.5" />}
+              {stage === "DISPUTED" ? "Mark as Disputed" : `Advance to ${STAGE_LABELS[stage]}`}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          {report && user?.role === "CALA" && (
+            <Button variant="outline" size="sm" className="text-xs h-8" onClick={handleTrigger} disabled={triggering}>
+              {triggering ? <Spinner className="mr-1.5 size-3.5" /> : null}
+              Re-run Scrutiny
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8 text-rose-600 border-rose-200 hover:bg-rose-50 hover:border-rose-300"
+              onClick={onDelete}
+            >
+              <Trash2 className="mr-1.5 size-3.5" /> Delete Project
+            </Button>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -1908,6 +2161,15 @@ function Workbench() {
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState<string | null>(null)
+  const [proposalToDelete, setProposalToDelete] = useState<Proposal | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
+  const [deletedSuccess, setDeletedSuccess] = useState<string>("")
+
+  const canDelete =
+    user?.role === "REQUIRING_BODY" ||
+    user?.role === "CALA" ||
+    user?.role === "STATE_MONITOR"
 
   const fetchProposals = useCallback(async () => {
     try {
@@ -1920,7 +2182,28 @@ function Workbench() {
     }
   }, [])
 
-  useEffect(() => { fetchProposals() }, [fetchProposals])
+  useEffect(() => { fetchProposals() }, [fetchProposals, user?.id, user?.role])
+
+  async function handleConfirmDelete() {
+    if (!proposalToDelete) return
+    setDeleting(true)
+    setDeleteError("")
+    try {
+      await api.delete(`/proposals/${proposalToDelete.id}`)
+      const deletedName = proposalToDelete.project_name
+      setProposalToDelete(null)
+      setDeletedSuccess(`Project "${deletedName}" was permanently deleted.`)
+      setTimeout(() => setDeletedSuccess(""), 4500)
+      if (open === proposalToDelete.id) {
+        setOpen(null)
+      }
+      fetchProposals()
+    } catch (err: any) {
+      setDeleteError(err.message || "Failed to delete project proposal")
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const roleLabel = user ? ROLE_LABELS[user.role] : "CALA"
 
@@ -1932,6 +2215,23 @@ function Workbench() {
         description={user?.role === "REQUIRING_BODY" ? "Review submitted proposals, statutory documents, and AI scrutiny status." : "Review proposals, scrutiny findings, and statutory compliance before approval."}
         action={<Button variant="outline"><Search data-icon="inline-start" /> Search proposals</Button>}
       />
+
+      {deletedSuccess && (
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
+            <span>{deletedSuccess}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeletedSuccess("")}
+            className="text-emerald-700 hover:text-emerald-900"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
       <Card className="border-slate-200 shadow-none">
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -1953,22 +2253,45 @@ function Workbench() {
             proposals.map((p) => (
               <Collapsible key={p.id} open={open === p.id} onOpenChange={(v) => setOpen(v ? p.id : null)}>
                 <div className="border-t border-slate-200">
-                  <CollapsibleTrigger className="flex w-full items-center gap-3 p-4 text-left hover:bg-slate-50">
-                    <span className="grid size-8 place-items-center rounded-lg bg-teal-50 text-teal-700">
-                      <FileText className="size-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-medium text-slate-800">{p.project_name}</span>
-                      <span className="mt-1 block text-xs text-slate-500">
-                        {p.district}, {p.state} · {fmtHectares(p.area_hectares)}
+                  <div className="flex items-center justify-between hover:bg-slate-50/80 transition-colors">
+                    <CollapsibleTrigger className="flex min-w-0 flex-1 items-center gap-3 p-4 text-left">
+                      <span className="grid size-8 place-items-center rounded-lg bg-teal-50 text-teal-700">
+                        <FileText className="size-4" />
                       </span>
-                    </span>
-                    <Status>{STAGE_LABELS[p.stage]}</Status>
-                    <span className="hidden text-xs text-slate-500 sm:block">{fmtDate(p.created_at)}</span>
-                    {open === p.id ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                  </CollapsibleTrigger>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-medium text-slate-800">{p.project_name}</span>
+                        <span className="mt-1 block text-xs text-slate-500">
+                          {p.district}, {p.state} · {fmtHectares(p.area_hectares)}
+                        </span>
+                      </span>
+                      <Status>{STAGE_LABELS[p.stage]}</Status>
+                      <span className="hidden text-xs text-slate-500 sm:block">{fmtDate(p.created_at)}</span>
+                      {open === p.id ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                    </CollapsibleTrigger>
+                    {canDelete && (
+                      <button
+                        type="button"
+                        title={`Delete project "${p.project_name}"`}
+                        className="mr-3 p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setProposalToDelete(p)
+                          setDeleteError("")
+                        }}
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    )}
+                  </div>
                   <CollapsibleContent>
-                    <Scrutiny proposal={p} onTransition={fetchProposals} />
+                    <Scrutiny
+                      proposal={p}
+                      onTransition={fetchProposals}
+                      onDelete={() => {
+                        setProposalToDelete(p)
+                        setDeleteError("")
+                      }}
+                    />
                   </CollapsibleContent>
                 </div>
               </Collapsible>
@@ -1976,6 +2299,73 @@ function Workbench() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Project Confirmation Modal */}
+      {proposalToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200">
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-xl bg-rose-100 text-rose-700">
+                <Trash2 className="size-5" />
+              </span>
+              <div>
+                <h3 className="text-base font-semibold text-slate-900">Delete Project Proposal?</h3>
+                <p className="text-xs text-slate-500">Permanent statutory record removal</p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-1.5">
+              <p className="text-xs font-semibold text-slate-800">{proposalToDelete.project_name}</p>
+              <div className="flex flex-wrap gap-2 text-[11px] text-slate-500">
+                <span>📍 {proposalToDelete.district}, {proposalToDelete.state}</span>
+                <span>📐 {fmtHectares(proposalToDelete.area_hectares)}</span>
+                <span>Milestone: {STAGE_LABELS[proposalToDelete.stage]}</span>
+              </div>
+            </div>
+
+            <p className="mt-3 text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to permanently delete this project? All associated PostGIS parcel demarcations, statutory title deed records, and AI scrutiny reports will be permanently removed.
+            </p>
+
+            {deleteError && (
+              <div className="mt-3 rounded-lg border border-red-300 bg-red-50 p-2.5 text-xs text-red-700 flex items-center gap-2">
+                <AlertCircle className="size-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setProposalToDelete(null)
+                  setDeleteError("")
+                }}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                {deleting ? (
+                  <>
+                    <Spinner className="mr-1.5 size-3.5 text-white" /> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-1.5 size-3.5" /> Confirm Delete
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
@@ -1983,6 +2373,175 @@ function Workbench() {
 // ═══════════════════════════════════════════════════════════════
 // SUBMIT PROPOSAL — Unified proposal, parcel, and document submission
 // ═══════════════════════════════════════════════════════════════
+interface DemoScenario {
+  project_name: string
+  state: string
+  district: string
+  area_hectares: string
+  justification: string
+  owner_name: string
+  claimed_area_sqm: string
+  badge_label: string
+  coordinates: [number, number][]
+  sample_document_filename: string
+}
+
+const ALL_SAMPLE_DOCS = [
+  {
+    filename: "Title_Deed_Pune_Nashik_Ganesh_Patil.pdf",
+    shortLabel: "Pune Rail (Ganesh Patil)",
+    title: "Title Deed: Pune-Nashik Semi-High Speed Rail Corridor — Mr. Ganesh Patil",
+    isMismatch: false,
+  },
+  {
+    filename: "Title_Deed_WDFC_Devendra_Singh_Yadav.pdf",
+    shortLabel: "WDFC Freight (Devendra Yadav)",
+    title: "Title Deed: Western Dedicated Freight Corridor — Shri Devendra Singh Yadav",
+    isMismatch: false,
+  },
+  {
+    filename: "Title_Deed_Expressway_Bhavnaben_Patel.pdf",
+    shortLabel: "Gujarat Expressway (Bhavnaben Patel)",
+    title: "Title Deed: Delhi-Mumbai Expressway — Smt. Bhavnaben Patel",
+    isMismatch: false,
+  },
+  {
+    filename: "Title_Deed_MMLP_Talegaon_Ganesh_Patil.pdf",
+    shortLabel: "MMLP Hub (Ganesh Patil)",
+    title: "Title Deed: Multi-Modal Logistics Park Talegaon — Mr. Ganesh Patil",
+    isMismatch: false,
+  },
+  {
+    filename: "Title_Deed_Khavda_Solar_Suresh_Jadeja.pdf",
+    shortLabel: "Kutch Solar (Suresh Jadeja)",
+    title: "Title Deed: Khavda Ultra Mega Solar Park — Shri Suresh Kumar Jadeja",
+    isMismatch: false,
+  },
+  {
+    filename: "Title_Deed_Bengaluru_Expressway_Venkataswamy.pdf",
+    shortLabel: "Bengaluru Exp (Venkataswamy)",
+    title: "Title Deed: Bengaluru-Chennai Expressway — Shri M. Venkataswamy",
+    isMismatch: false,
+  },
+  {
+    filename: "Title_Deed_Mismatch_Disputed_Sample.pdf",
+    shortLabel: "⚠️ Mismatch Test (Ramesh Sharma)",
+    title: "Title Deed: Discrepancy Test Document — Shri Ramesh Chandra Sharma",
+    isMismatch: true,
+  },
+]
+
+const DEMO_SCENARIOS: DemoScenario[] = [
+  {
+    project_name: "Pune-Nashik Semi-High Speed Rail Corridor — Package IV",
+    state: "Maharashtra",
+    district: "Pune",
+    area_hectares: "1.2",
+    justification: "Acquisition of private agricultural land for dedicated high-speed rail corridor linking Pune and Nashik under PM GatiShakti National Master Plan.",
+    owner_name: "Mr. Ganesh Patil",
+    claimed_area_sqm: "12000",
+    badge_label: "Semi-High Speed Rail (Pune, MH)",
+    sample_document_filename: "Title_Deed_Pune_Nashik_Ganesh_Patil.pdf",
+    coordinates: [
+      [73.56, 18.51],
+      [73.59, 18.51],
+      [73.59, 18.54],
+      [73.56, 18.54],
+      [73.56, 18.51],
+    ],
+  },
+  {
+    project_name: "Western Dedicated Freight Corridor (WDFC) — Phase II Feeder Spur",
+    state: "Haryana",
+    district: "Gurugram",
+    area_hectares: "4.75",
+    justification: "Statutory acquisition of agricultural and transit parcels for the double-stack container electrified railway feeder line connecting Sohna industrial logistics hub with Rewari junction under National Rail Plan 2030.",
+    owner_name: "Shri Devendra Singh Yadav",
+    claimed_area_sqm: "47500",
+    badge_label: "Dedicated Freight Corridor (Gurugram, HR)",
+    sample_document_filename: "Title_Deed_WDFC_Devendra_Singh_Yadav.pdf",
+    coordinates: [
+      [77.01, 28.32],
+      [77.04, 28.32],
+      [77.04, 28.35],
+      [77.01, 28.35],
+      [77.01, 28.32],
+    ],
+  },
+  {
+    project_name: "Delhi-Mumbai Greenfield Expressway (NE-4) — Vadodara-Bharuch Section",
+    state: "Gujarat",
+    district: "Vadodara",
+    area_hectares: "6.80",
+    justification: "Greenfield right-of-way (ROW) acquisition for 8-lane access-controlled motorway, grade-separated trumpet interchange, and emergency flight-strip landing corridor under Bharatmala Pariyojana.",
+    owner_name: "Smt. Bhavnaben Patel",
+    claimed_area_sqm: "68000",
+    badge_label: "Greenfield Expressway (Vadodara, GJ)",
+    sample_document_filename: "Title_Deed_Expressway_Bhavnaben_Patel.pdf",
+    coordinates: [
+      [73.18, 22.28],
+      [73.22, 22.28],
+      [73.22, 22.31],
+      [73.18, 22.31],
+      [73.18, 22.28],
+    ],
+  },
+  {
+    project_name: "PM GatiShakti Multi-Modal Logistics Park (MMLP) — Talegaon Hub",
+    state: "Maharashtra",
+    district: "Pune",
+    area_hectares: "8.40",
+    justification: "Acquisition of non-irrigated farmland for rail-linked inland container depot (ICD), automated warehousing, and custom-bonded cargo apron adjacent to NH-48 corridor.",
+    owner_name: "Mr. Ganesh Patil",
+    claimed_area_sqm: "84000",
+    badge_label: "Multi-Modal Logistics Hub (Pune, MH)",
+    sample_document_filename: "Title_Deed_MMLP_Talegaon_Ganesh_Patil.pdf",
+    coordinates: [
+      [73.68, 18.72],
+      [73.72, 18.72],
+      [73.72, 18.75],
+      [73.68, 18.75],
+      [73.68, 18.72],
+    ],
+  },
+  {
+    project_name: "Khavda Ultra Mega Renewable Energy Hybrid Park — 765kV Evacuation Substation",
+    state: "Gujarat",
+    district: "Kutch",
+    area_hectares: "14.50",
+    justification: "Acquisition of revenue wasteland parcels for 765kV high-voltage direct current (HVDC) transmission towers and renewable power pooling station under the National Green Hydrogen & Solar Mission.",
+    owner_name: "Shri Suresh Kumar Jadeja",
+    claimed_area_sqm: "145000",
+    badge_label: "Renewable Hybrid Park (Kutch, GJ)",
+    sample_document_filename: "Title_Deed_Khavda_Solar_Suresh_Jadeja.pdf",
+    coordinates: [
+      [69.75, 23.82],
+      [69.80, 23.82],
+      [69.80, 23.87],
+      [69.75, 23.87],
+      [69.75, 23.82],
+    ],
+  },
+  {
+    project_name: "Bengaluru-Chennai Expressway (NE-7) — Hoskote to Malur Package I",
+    state: "Karnataka",
+    district: "Bengaluru Rural",
+    area_hectares: "3.65",
+    justification: "Acquisition of dry agricultural land for high-speed industrial expressway corridor connecting Karnataka manufacturing hubs with Chennai port facilities under Bharatmala Phase 1.",
+    owner_name: "Shri M. Venkataswamy",
+    claimed_area_sqm: "36500",
+    badge_label: "Industrial Expressway (Bengaluru, KA)",
+    sample_document_filename: "Title_Deed_Bengaluru_Expressway_Venkataswamy.pdf",
+    coordinates: [
+      [77.82, 13.06],
+      [77.86, 13.06],
+      [77.86, 13.09],
+      [77.82, 13.09],
+      [77.82, 13.06],
+    ],
+  },
+]
+
 function SubmitProposal() {
   const router = useRouter()
   const [form, setForm] = useState({
@@ -2000,6 +2559,12 @@ function SubmitProposal() {
 
   // Statutory document state
   const [titleDeedFile, setTitleDeedFile] = useState<File | null>(null)
+  const [attachingDoc, setAttachingDoc] = useState(false)
+
+  // Demo scenarios state
+  const [activeScenario, setActiveScenario] = useState<DemoScenario | null>(null)
+  const [activeScenarioLabel, setActiveScenarioLabel] = useState<string>("")
+  const lastScenarioIdx = useRef<number>(-1)
 
   // Submission state
   const [submitting, setSubmitting] = useState(false)
@@ -2013,19 +2578,12 @@ function SubmitProposal() {
 
   // Quick fill sample GeoJSON
   function fillSampleGeoJSON() {
+    const coords = (activeScenario || DEMO_SCENARIOS[0]).coordinates
     setParcelGeoJSON(
       JSON.stringify(
         {
           type: "Polygon",
-          coordinates: [
-            [
-              [73.56, 18.51],
-              [73.59, 18.51],
-              [73.59, 18.54],
-              [73.56, 18.54],
-              [73.56, 18.51],
-            ],
-          ],
+          coordinates: [coords],
         },
         null,
         2
@@ -2033,18 +2591,54 @@ function SubmitProposal() {
     )
   }
 
-  // Helper to load full demo scenario for quick testing
+  // Helper to load random realistic demo scenarios for quick pitch testing
   function loadDemoScenario() {
+    let nextIdx = Math.floor(Math.random() * DEMO_SCENARIOS.length)
+    if (nextIdx === lastScenarioIdx.current && DEMO_SCENARIOS.length > 1) {
+      nextIdx = (nextIdx + 1) % DEMO_SCENARIOS.length
+    }
+    lastScenarioIdx.current = nextIdx
+
+    const s = DEMO_SCENARIOS[nextIdx]
+    setActiveScenario(s)
     setForm({
-      project_name: "Pune-Nashik Semi-High Speed Rail Corridor — Package IV",
-      state: "Maharashtra",
-      district: "Pune",
-      area_hectares: "1.2",
-      justification: "Acquisition of private agricultural land for dedicated high-speed rail corridor linking Pune and Nashik under PM GatiShakti National Master Plan.",
+      project_name: s.project_name,
+      state: s.state,
+      district: s.district,
+      area_hectares: s.area_hectares,
+      justification: s.justification,
     })
-    setParcelOwnerName("Mr. Ganesh Patil")
-    setParcelClaimedArea("12000")
-    fillSampleGeoJSON()
+    setParcelOwnerName(s.owner_name)
+    setParcelClaimedArea(s.claimed_area_sqm)
+    setParcelGeoJSON(
+      JSON.stringify(
+        {
+          type: "Polygon",
+          coordinates: [s.coordinates],
+        },
+        null,
+        2
+      )
+    )
+    setActiveScenarioLabel(s.badge_label)
+  }
+
+  // Helper to auto-attach matching statutory sample document
+  async function handleAutoAttachDocument(filename?: string) {
+    const targetFile =
+      filename || activeScenario?.sample_document_filename || DEMO_SCENARIOS[0].sample_document_filename
+    setAttachingDoc(true)
+    try {
+      const res = await fetch(`/sample_documents/${targetFile}`)
+      if (!res.ok) throw new Error("Could not fetch sample document")
+      const blob = await res.blob()
+      const file = new File([blob], targetFile, { type: "application/pdf" })
+      setTitleDeedFile(file)
+    } catch (err) {
+      console.error("Failed to auto-attach sample document:", err)
+    } finally {
+      setAttachingDoc(false)
+    }
   }
 
   // Real-time GeoJSON validation
@@ -2138,14 +2732,21 @@ function SubmitProposal() {
         title="Submit acquisition proposal"
         description="Register project details, GPS parcel boundaries, and statutory documents in one unified workflow."
         action={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadDemoScenario}
-            className="border-teal-300 text-teal-800 hover:bg-teal-50"
-          >
-            <Sparkles className="mr-1.5 size-4 text-teal-600" /> Load Demo Scenario
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            {activeScenarioLabel && (
+              <span className="inline-flex items-center text-xs font-medium text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full animate-in fade-in zoom-in-95">
+                <Sparkles className="mr-1 size-3 text-teal-600" /> Loaded: {activeScenarioLabel}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadDemoScenario}
+              className="border-teal-300 text-teal-800 hover:bg-teal-50 shadow-xs"
+            >
+              <Sparkles className="mr-1.5 size-4 text-teal-600" /> Load Random Scenario ({DEMO_SCENARIOS.length})
+            </Button>
+          </div>
         }
       />
 
@@ -2203,8 +2804,9 @@ function SubmitProposal() {
                     <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                      <SelectItem value="Karnataka">Karnataka</SelectItem>
+                      <SelectItem value="Haryana">Haryana</SelectItem>
                       <SelectItem value="Gujarat">Gujarat</SelectItem>
+                      <SelectItem value="Karnataka">Karnataka</SelectItem>
                       <SelectItem value="Rajasthan">Rajasthan</SelectItem>
                       <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
                       <SelectItem value="Uttar Pradesh">Uttar Pradesh</SelectItem>
@@ -2217,9 +2819,13 @@ function SubmitProposal() {
                     <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Pune">Pune</SelectItem>
+                      <SelectItem value="Gurugram">Gurugram</SelectItem>
+                      <SelectItem value="Vadodara">Vadodara</SelectItem>
+                      <SelectItem value="Kutch">Kutch</SelectItem>
+                      <SelectItem value="Bengaluru Rural">Bengaluru Rural</SelectItem>
+                      <SelectItem value="Bengaluru Urban">Bengaluru Urban</SelectItem>
                       <SelectItem value="Nagpur">Nagpur</SelectItem>
                       <SelectItem value="Nashik">Nashik</SelectItem>
-                      <SelectItem value="Bengaluru Urban">Bengaluru Urban</SelectItem>
                       <SelectItem value="Jaipur">Jaipur</SelectItem>
                       <SelectItem value="Ahmedabad">Ahmedabad</SelectItem>
                     </SelectContent>
@@ -2367,6 +2973,64 @@ function SubmitProposal() {
                   </Button>
                 </div>
               )}
+
+              {/* Sample Documents Helper Bar */}
+              <div className="rounded-xl border border-teal-100 bg-teal-50/50 p-3.5 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="size-4 text-teal-600" />
+                    <span className="text-xs font-semibold text-teal-900">
+                      Sample Statutory Title Deeds ({ALL_SAMPLE_DOCS.length} Ready-to-use PDFs)
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`/sample_documents/${activeScenario?.sample_document_filename || DEMO_SCENARIOS[0].sample_document_filename}`}
+                      download
+                      className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 hover:text-teal-900 bg-white border border-teal-200 px-2.5 py-1 rounded-lg shadow-2xs hover:bg-teal-50 transition-colors"
+                    >
+                      <Download className="size-3.5" /> Download Matching PDF
+                    </a>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleAutoAttachDocument()}
+                      disabled={attachingDoc}
+                      className="h-7 bg-[#0b5664] hover:bg-[#083f4a] text-white text-xs px-2.5"
+                    >
+                      {attachingDoc ? (
+                        <>
+                          <Spinner className="mr-1 size-3 text-white" /> Attaching...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-1 size-3 text-teal-200" /> Auto-Attach Matching Deed
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-teal-100/80">
+                  <span className="text-[11px] text-teal-700 font-medium mr-1">Quick pick:</span>
+                  {ALL_SAMPLE_DOCS.map((doc) => (
+                    <button
+                      key={doc.filename}
+                      type="button"
+                      onClick={() => handleAutoAttachDocument(doc.filename)}
+                      className={`text-[11px] px-2 py-0.5 rounded-md border transition-colors ${
+                        doc.isMismatch
+                          ? "border-rose-200 bg-rose-50/80 text-rose-700 hover:bg-rose-100"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-100 hover:border-slate-300"
+                      }`}
+                      title={doc.title}
+                    >
+                      {doc.shortLabel}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <p className="text-xs text-slate-500">
                 Uploaded documents are stored in the immutable document repository and cross-audited by the Legal Scrutinizer AI Agent.
               </p>

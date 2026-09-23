@@ -9,7 +9,8 @@ const {
   getProposal,
   transitionProposal,
   getScrutinyReport,
-  triggerScrutiny
+  triggerScrutiny,
+  deleteProposal
 } = require('../controllers/proposal.controller');
 
 router.use(authenticate); // every route below requires a valid JWT
@@ -18,6 +19,7 @@ router.post('/', requirePermission('proposal:create'), asyncHandler(createPropos
 router.get('/', asyncHandler(listProposals)); // scoping handled inside controller by role
 router.get('/:id', asyncHandler(getProposal));
 router.patch('/:id/transition', requirePermission('proposal:transition_stage'), asyncHandler(transitionProposal));
+router.delete('/:id', requirePermission('proposal:delete'), asyncHandler(deleteProposal));
 
 // Scrutiny API
 router.get('/:id/scrutiny', requirePermission('scrutiny:view_report'), asyncHandler(getScrutinyReport));

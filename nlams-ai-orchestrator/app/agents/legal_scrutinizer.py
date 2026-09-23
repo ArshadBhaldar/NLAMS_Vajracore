@@ -3,18 +3,29 @@ from difflib import SequenceMatcher
 from app.config import settings
 
 AREA_PATTERN = re.compile(r"(\d+(?:\.\d+)?)\s*(sq\.?\s?m|sqm|square\s?met(?:er|re)s?|hectares?|ha\b)", re.IGNORECASE)
-# Matches "Owner:", "Name of owner -", "in the name of" followed by a
-# Title-Case name (2-5 capitalized words), stopping before lowercase
-# connector words like "holds", "is", "resides" so it doesn't swallow the
-# rest of the sentence into the extracted name.
+# Matches "Name of owner:", "Owner Name:", "In the name of:", "Owner:" followed by a
+# Title-Case name on the same line, stopping before newlines or lowercase connector words.
 OWNER_LABEL_PATTERN = re.compile(
-    r"(?i:owner|name of owner|in the name of)\s*[:\-]?\s*"
-    r"([A-Z][a-zA-Z.]*(?:\s+[A-Z][a-zA-Z.]*){0,4})",
+    r"(?i:name\s+of\s+(?:the\s+)?owner|owner(?:'s)?\s+name|in\s+the\s+name\s+of|registered\s+owner|owner)\s*[:\-]?\s*"
+    r"([A-Z][a-zA-Z.]*(?:[^\S\r\n]+[A-Z][a-zA-Z.]*){0,4})",
 )
 
 
+def _normalize_name(name: str) -> str:
+    n = re.sub(r"^(?:mr\.?|mrs\.?|ms\.?|shri\.?|smt\.?|dr\.?)\s+", "", (name or "").strip(), flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", n).strip().lower()
+
+
 def _name_similarity(a: str, b: str) -> float:
-    return SequenceMatcher(None, a.strip().lower(), b.strip().lower()).ratio()
+    norm_a = _normalize_name(a)
+    norm_b = _normalize_name(b)
+    if not norm_a or not norm_b:
+        return 0.0
+    if norm_a == norm_b:
+        return 1.0
+    if norm_a in norm_b or norm_b in norm_a:
+        return max(0.9, SequenceMatcher(None, norm_a, norm_b).ratio())
+    return SequenceMatcher(None, norm_a, norm_b).ratio()
 
 
 def _heuristic_extract(deed_text: str) -> dict:
