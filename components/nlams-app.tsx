@@ -40,71 +40,76 @@ import {
   type Parcel, type DocumentRecord, type ScrutinyReport,
 } from "@/lib/types"
 
-// ─── Demo Personas for Quick Switch ───────────────────────────
-const DEMO_PERSONAS: { role: UserRole; name: string; email: string; icon: string; title: string }[] = [
-  { role: "REQUIRING_BODY", name: "NHAI Project Office", email: "nhai@demo.gov.in", icon: "🏗️", title: "Requiring Body" },
-  { role: "CALA", name: "District Collector, Pune", email: "cala.pune@demo.gov.in", icon: "⚖️", title: "District CALA" },
-  { role: "CITIZEN", name: "Ganesh Patil (Landowner)", email: "ganesh.patil@demo.gov.in", icon: "🧑‍🌾", title: "Citizen Portal" },
-  { role: "STATE_MONITOR", name: "Ministry Monitor", email: "monitor@demo.gov.in", icon: "📈", title: "State Monitor" },
-  { role: "FIELD_SURVEYOR", name: "Anita (Field Surveyor)", email: "surveyor.anita@demo.gov.in", icon: "📷", title: "Field Surveyor" },
+// ─── Authority Personas for Role-Based Context Switching ──────
+const DEMO_PERSONAS: { role: UserRole; name: string; email: string; dept: string; title: string }[] = [
+  { role: "REQUIRING_BODY", name: "NHAI Project Implementation Unit", email: "nhai@demo.gov.in", dept: "Ministry of Road Transport & Highways", title: "Project Proponent (NHAI)" },
+  { role: "CALA", name: "Rohan Deshmukh, IAS (District Collector)", email: "cala.pune@demo.gov.in", dept: "District Collectorate, Pune", title: "District Authority (CALA)" },
+  { role: "CITIZEN", name: "Ganesh Patil", email: "ganesh.patil@demo.gov.in", dept: "Khatedar Landowner, Mulshi", title: "Citizen Landowner" },
+  { role: "STATE_MONITOR", name: "National PMU Directorate", email: "monitor@demo.gov.in", dept: "PM GatiShakti Secretariat", title: "National Monitor (MoRTH)" },
+  { role: "FIELD_SURVEYOR", name: "Anita Kulkarni", email: "surveyor.anita@demo.gov.in", dept: "Cadastral Survey Directorate", title: "Cadastral Field Surveyor" },
 ]
 
 // ─── Navigation per role ──────────────────────────────────────
 const navByRole: Record<UserRole, { label: string; href: string; icon: typeof LayoutDashboard }[]> = {
   STATE_MONITOR: [
-    { label: "National Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "National GIS Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { label: "Project Workbench", href: "/workbench", icon: FolderKanban },
-    { label: "Reports & Analytics", href: "/dashboard", icon: FileCheck2 },
+    { label: "Audit Reports & Analytics", href: "/dashboard", icon: FileCheck2 },
   ],
   REQUIRING_BODY: [
-    { label: "My Projects", href: "/dashboard", icon: Building2 },
-    { label: "Submit Proposal", href: "/submit-proposal", icon: Plus },
-    { label: "Project Proposals", href: "/workbench", icon: FolderKanban },
+    { label: "Corridor Portfolios", href: "/dashboard", icon: Building2 },
+    { label: "Submit Acquisition Proposal", href: "/submit-proposal", icon: Plus },
+    { label: "Statutory Workbench", href: "/workbench", icon: FolderKanban },
   ],
   CALA: [
-    { label: "CALA Workbench", href: "/workbench", icon: FolderKanban },
-    { label: "National Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Field Verification", href: "/field-survey", icon: Map },
+    { label: "CALA Adjudication Workbench", href: "/workbench", icon: FolderKanban },
+    { label: "National GIS Map", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Field Survey Queue", href: "/field-survey", icon: Map },
   ],
   FIELD_SURVEYOR: [
-    { label: "Survey Queue", href: "/field-survey", icon: Camera },
-    { label: "My Assignments", href: "/field-survey", icon: Map },
-    { label: "Sync Centre", href: "/field-survey", icon: Globe2 },
+    { label: "GNSS Cadastral Queue", href: "/field-survey", icon: Camera },
+    { label: "Demarcation Inspections", href: "/field-survey", icon: Map },
+    { label: "Sync & PostGIS Centre", href: "/field-survey", icon: Globe2 },
   ],
   CITIZEN: [
-    { label: "My Land", href: "/my-land", icon: UserRound },
-    { label: "Applications", href: "/my-land", icon: FileText },
-    { label: "Help & Support", href: "/my-land", icon: CircleHelp },
+    { label: "My Land & Rights Portal", href: "/my-land", icon: UserRound },
+    { label: "Statutory Filings", href: "/my-land", icon: FileText },
+    { label: "Grievance Helpdesk", href: "/my-land", icon: CircleHelp },
   ],
 }
 
 // ─── Shared components ────────────────────────────────────────
 const statusTone: Record<string, string> = {
-  Low: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Medium: "border-amber-200 bg-amber-50 text-amber-700",
-  High: "border-red-200 bg-red-50 text-red-700",
-  PAID: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Paid: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  ASSESSED: "border-amber-200 bg-amber-50 text-amber-700",
-  Pending: "border-amber-200 bg-amber-50 text-amber-700",
-  PENDING: "border-amber-200 bg-amber-50 text-amber-700",
-  OPEN: "border-amber-200 bg-amber-50 text-amber-700",
-  RESOLVED: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  REJECTED: "border-red-200 bg-red-50 text-red-700",
-  Synced: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  Failed: "border-red-200 bg-red-50 text-red-700",
+  Low: "border-emerald-200/90 bg-emerald-50 text-emerald-800 font-mono",
+  Medium: "border-amber-200/90 bg-amber-50 text-amber-800 font-mono",
+  High: "border-rose-200/90 bg-rose-50 text-rose-800 font-mono",
+  PAID: "border-emerald-200/90 bg-emerald-50 text-emerald-800 font-mono",
+  Paid: "border-emerald-200/90 bg-emerald-50 text-emerald-800 font-mono",
+  ASSESSED: "border-blue-200/90 bg-blue-50 text-blue-800 font-mono",
+  Pending: "border-amber-200/90 bg-amber-50 text-amber-800 font-mono",
+  PENDING: "border-amber-200/90 bg-amber-50 text-amber-800 font-mono",
+  OPEN: "border-amber-200/90 bg-amber-50 text-amber-800 font-mono",
+  RESOLVED: "border-emerald-200/90 bg-emerald-50 text-emerald-800 font-mono",
+  REJECTED: "border-rose-200/90 bg-rose-50 text-rose-800 font-mono",
+  Synced: "border-emerald-200/90 bg-emerald-50 text-emerald-800 font-mono",
+  Failed: "border-rose-200/90 bg-rose-50 text-rose-800 font-mono",
+  DRAFT: "border-slate-300 bg-slate-100 text-slate-700 font-mono",
+  NOTIFIED_3A: "border-blue-300 bg-blue-50 text-blue-900 font-mono",
+  DECLARED_3D: "border-amber-300 bg-amber-50 text-amber-950 font-mono",
+  AWARD: "border-indigo-300 bg-indigo-50 text-indigo-900 font-mono",
+  POSSESSION: "border-emerald-300 bg-emerald-50 text-emerald-950 font-mono",
 }
 
 function Status({ children }: { children: string }) {
   return (
-    <Badge variant="outline" className={statusTone[children] ?? "border-slate-200 bg-slate-50 text-slate-600"}>
+    <Badge variant="outline" className={`text-[11px] font-semibold tracking-wide py-0.5 px-2 rounded-md ${statusTone[children] ?? "border-slate-200 bg-slate-50 text-slate-700 font-mono"}`}>
       {children}
     </Badge>
   )
 }
 
 function Spinner({ className }: { className?: string }) {
-  return <Loader2 className={`animate-spin ${className ?? "size-5 text-teal-700"}`} />
+  return <Loader2 className={`animate-spin ${className ?? "size-5 text-slate-700"}`} />
 }
 
 // ─── Shell ────────────────────────────────────────────────────
@@ -115,8 +120,8 @@ function Shell({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f7f8]">
-        <Spinner className="size-8 text-teal-700" />
+      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+        <Spinner className="size-8 text-slate-800" />
       </div>
     )
   }
@@ -133,126 +138,207 @@ function Shell({ children }: { children: React.ReactNode }) {
     .toUpperCase()
 
   return (
-    <div className="min-h-screen bg-[#f4f7f8] text-slate-900">
+    <div className="min-h-screen bg-slate-50/80 text-slate-900 antialiased font-sans">
+      {/* Official Government of India Tricolor Ribbon */}
+      <div className="fixed top-0 inset-x-0 z-50 h-[3px] w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808]" />
+
+      {/* Official Institutional Authority Bar */}
+      <div className="fixed top-[3px] inset-x-0 z-40 hidden h-7 border-b border-slate-800 bg-[#090D1A] px-4 text-[10.5px] text-slate-300 sm:flex sm:items-center sm:justify-between lg:px-7">
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-white tracking-wide flex items-center gap-1.5">
+            <span className="inline-block size-1.5 rounded-full bg-emerald-400" /> भारत सरकार | Government of India
+          </span>
+          <span className="text-slate-600">•</span>
+          <span className="text-slate-300 hidden md:inline">Ministry of Road Transport &amp; Highways / Ministry of Railways</span>
+        </div>
+        <div className="flex items-center gap-4 font-mono text-[10px] text-slate-400">
+          <span className="hidden lg:inline-flex items-center gap-1 text-slate-300">
+            <ShieldCheck className="size-3 text-amber-400" /> PM GatiShakti NMP Integrated
+          </span>
+          <span>● PostGIS EPSG:4326 Live</span>
+          <span className="text-slate-300 font-sans">Helpline: <strong className="text-white">1800-11-2013</strong> (Toll Free, 24x7)</span>
+        </div>
+      </div>
+
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 hidden border-r border-slate-200 bg-[#082b3a] text-white transition-all lg:block ${collapsed ? "w-[76px]" : "w-[250px]"}`}
+        className={`fixed inset-y-0 left-0 z-30 hidden border-r border-slate-800 bg-[#0A0F1D] text-slate-100 transition-all duration-200 lg:block ${collapsed ? "w-[76px]" : "w-[260px]"} pt-[31px]`}
       >
-        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-5">
-          <div className="grid size-9 place-items-center rounded-lg bg-teal-400 text-[#082b3a]">
-            <ShieldCheck />
+        {/* Brand Header */}
+        <div className="flex h-16 items-center gap-3 border-b border-slate-800/80 px-5">
+          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-slate-950 font-bold shadow-sm">
+            <ShieldCheck className="size-5 text-slate-950 stroke-[2.5]" />
           </div>
           {!collapsed && (
-            <div>
-              <p className="font-semibold tracking-wide">
-                NLAMS <span className="text-teal-300">2.0</span>
-              </p>
-              <p className="text-[10px] uppercase tracking-[.18em] text-slate-300">
-                Government of India
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <p className="font-bold tracking-tight text-white text-base">NLAMS</p>
+                <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-amber-300 border border-amber-500/30">2.0</span>
+              </div>
+              <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                Vajracore DPI Engine
               </p>
             </div>
           )}
         </div>
-        <nav className="flex flex-col gap-1 p-3">
-          {nav.map(({ label, href, icon: Icon }) => (
-            <Link
-              key={label}
-              href={href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm transition-colors ${pathname === href ? "bg-teal-400/15 text-teal-200" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
-            >
-              <Icon className="size-4 shrink-0" />
-              {!collapsed && <span>{label}</span>}
-            </Link>
-          ))}
-        </nav>
-        <div className="absolute bottom-4 left-3 right-3 rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
+
+        {/* Navigation list */}
+        <div className="flex flex-col justify-between h-[calc(100vh-6.75rem)] p-3">
+          <div className="space-y-4">
+            {!collapsed && (
+              <p className="px-3 pt-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                Operational Workspaces
+              </p>
+            )}
+            <nav className="flex flex-col gap-1">
+              {nav.map(({ label, href, icon: Icon }) => {
+                const isActive = pathname === href
+                return (
+                  <Link
+                    key={label}
+                    href={href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-xs font-medium transition-all ${
+                      isActive
+                        ? "bg-slate-800/90 text-white shadow-xs border-l-2 border-amber-500 font-semibold"
+                        : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
+                    }`}
+                  >
+                    <Icon className={`size-4 shrink-0 ${isActive ? "text-amber-400" : "text-slate-400"}`} />
+                    {!collapsed && <span className="truncate">{label}</span>}
+                  </Link>
+                )
+              })}
+            </nav>
+          </div>
+
+          {/* Bottom user jurisdiction badge */}
           {!collapsed && (
-            <>
-              <p className="font-medium text-white">Secure workspace</p>
-              <p className="mt-1">Role: {ROLE_LABELS[role]}</p>
-              {user.district && <p className="mt-0.5">District: {user.district}</p>}
-            </>
+            <div className="rounded-xl border border-slate-800 bg-slate-900/90 p-3 text-xs shadow-inner">
+              <div className="flex items-center justify-between text-[10.5px] font-semibold text-slate-300">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" /> Active Session
+                </span>
+                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-mono text-slate-300 border border-slate-700">NIC SSO</span>
+              </div>
+              <p className="mt-2 font-semibold text-white truncate text-xs">{user.name}</p>
+              <p className="text-[10px] text-slate-400 truncate">{ROLE_LABELS[role]}</p>
+              {user.district && (
+                <div className="mt-2 border-t border-slate-800 pt-1.5 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>Jurisdiction:</span>
+                  <span className="font-semibold text-slate-200 font-mono">{user.district}</span>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className={`transition-[margin] ${collapsed ? "lg:ml-[76px]" : "lg:ml-[250px]"}`}>
-        <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:px-7">
+      {/* Main content wrapper */}
+      <div className={`transition-[margin] duration-200 ${collapsed ? "lg:ml-[76px]" : "lg:ml-[260px]"} pt-7 sm:pt-7`}>
+        <header className="sticky top-7 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur lg:px-7 shadow-2xs">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="hidden lg:inline-flex" onClick={() => setCollapsed(!collapsed)} aria-label="Toggle sidebar">
-              <PanelLeft />
+            <Button variant="ghost" size="icon" className="hidden lg:inline-flex text-slate-600 hover:text-slate-900" onClick={() => setCollapsed(!collapsed)} aria-label="Toggle sidebar">
+              <PanelLeft className="size-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
-              <Menu />
+            <Button variant="ghost" size="icon" className="lg:hidden text-slate-600" aria-label="Open menu">
+              <Menu className="size-4" />
             </Button>
-            <div className="hidden text-sm text-slate-500 sm:block">
-              National Land Acquisition & Management System
+            <div className="hidden sm:flex sm:items-center sm:gap-2 text-xs">
+              <span className="font-bold text-slate-800">NLAMS Portal</span>
+              <span className="text-slate-300 font-light">/</span>
+              <span className="text-slate-600 font-medium">National Land Acquisition &amp; Management System</span>
+              <Badge variant="outline" className="ml-2 border-emerald-200 bg-emerald-50 text-emerald-800 text-[10px] font-mono font-medium">
+                RFCTLARR 2013 Verified
+              </Badge>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="hidden border-teal-200 bg-teal-50 text-teal-700 sm:inline-flex">
-              {ROLE_LABELS[role]}
-            </Badge>
 
-            {/* Quick Demo Persona Switcher */}
+          <div className="flex items-center gap-2.5">
+            {/* Executive Authority Role Switcher */}
             <DropdownMenu>
               <DropdownMenuTrigger render={
-                <Button variant="outline" size="sm" className="border-teal-300 bg-teal-50 text-teal-800 hover:bg-teal-100 inline-flex gap-1.5 text-xs h-8 font-medium">
-                  <span className="text-sm">🎭</span> Demo Role <ChevronDown className="size-3 text-teal-600" />
+                <Button variant="outline" size="sm" className="h-9 gap-2 border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-medium shadow-2xs">
+                  <Building2 className="size-3.5 text-slate-500" />
+                  <div className="text-left hidden md:block">
+                    <span className="text-[9.5px] text-slate-400 block -mb-0.5 uppercase tracking-wider font-semibold">Authority Context</span>
+                    <span className="font-semibold text-slate-900">{ROLE_LABELS[role]}</span>
+                  </div>
+                  <ChevronDown className="size-3 text-slate-400 ml-1" />
                 </Button>
               } />
-              <DropdownMenuContent align="end" className="w-60">
+              <DropdownMenuContent align="end" className="w-72 p-1.5 shadow-lg border-slate-200">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-xs text-slate-500">1-Click Switch Persona</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-slate-500 px-2 py-1.5">
+                    Switch Statutory Authority Context
+                  </DropdownMenuLabel>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  {DEMO_PERSONAS.map((p) => (
-                    <DropdownMenuItem
-                      key={p.email}
-                      onClick={() => login(p.email, "Demo@1234")}
-                      className={`flex items-center gap-2.5 text-xs cursor-pointer ${user.role === p.role ? 'bg-teal-50 font-semibold text-teal-900' : ''}`}
-                    >
-                      <span className="text-base">{p.icon}</span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">{p.title}</p>
-                        <p className="truncate text-[10px] text-slate-400">{p.name}</p>
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
+                  {DEMO_PERSONAS.map((p) => {
+                    const isCurrent = user.role === p.role
+                    return (
+                      <DropdownMenuItem
+                        key={p.email}
+                        onClick={() => login(p.email, "Demo@1234")}
+                        className={`flex items-start gap-2.5 p-2 rounded-lg text-xs cursor-pointer ${isCurrent ? 'bg-amber-50 text-amber-950 border border-amber-200/80 font-medium' : 'hover:bg-slate-50'}`}
+                      >
+                        <div className={`grid size-7 shrink-0 place-items-center rounded-md ${isCurrent ? 'bg-amber-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
+                          <Building2 className="size-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-semibold text-slate-900 leading-tight">{p.title}</p>
+                            {isCurrent && <span className="text-[9px] font-mono font-bold text-amber-700 bg-amber-100 px-1 rounded">ACTIVE</span>}
+                          </div>
+                          <p className="truncate text-[10.5px] text-slate-500 mt-0.5">{p.name}</p>
+                        </div>
+                      </DropdownMenuItem>
+                    )
+                  })}
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell />
-              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-amber-500" />
+            {/* Notifications */}
+            <Button variant="ghost" size="icon" className="relative size-9 text-slate-600 hover:text-slate-900">
+              <Bell className="size-4" />
+              <span className="absolute right-2 top-2 size-2 rounded-full bg-rose-500 ring-2 ring-white" />
             </Button>
+
+            {/* User Profile */}
             <DropdownMenu>
-              <DropdownMenuTrigger render={<Button variant="ghost" className="gap-2 px-2" />}>
-                <span className="grid size-8 place-items-center rounded-full bg-[#dceff0] text-sm font-semibold text-[#0b5664]">
-                  {initials}
-                </span>
-                <ChevronDown className="size-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuTrigger render={
+                <Button variant="ghost" className="gap-2 px-1.5 h-9 hover:bg-slate-100">
+                  <span className="grid size-8 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white shadow-xs">
+                    {initials}
+                  </span>
+                  <ChevronDown className="size-3 text-slate-400 hidden sm:block" />
+                </Button>
+              } />
+              <DropdownMenuContent align="end" className="w-56 shadow-lg border-slate-200">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-                  <DropdownMenuLabel className="text-xs font-normal text-slate-500">
+                  <DropdownMenuLabel className="font-semibold text-slate-900">{user.name}</DropdownMenuLabel>
+                  <DropdownMenuLabel className="text-xs font-normal text-slate-500 -mt-1">
                     {user.email}
                   </DropdownMenuLabel>
+                  <div className="px-2 pb-1.5">
+                    <span className="inline-block rounded bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700 font-mono">
+                      {ROLE_LABELS[role]}
+                    </span>
+                  </div>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile settings</DropdownMenuItem>
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 size-4" />
-                  Sign out
+                <DropdownMenuItem className="text-xs cursor-pointer">Profile &amp; Statutory Credentials</DropdownMenuItem>
+                <DropdownMenuItem className="text-xs cursor-pointer">Audit Logs &amp; Access Trail</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-xs text-rose-600 cursor-pointer">
+                  <LogOut className="mr-2 size-3.5" /> Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </header>
+
         <main className="mx-auto max-w-[1600px] p-4 lg:p-7">{children}</main>
       </div>
     </div>
@@ -262,35 +348,39 @@ function Shell({ children }: { children: React.ReactNode }) {
 // ─── Shared layout pieces ─────────────────────────────────────
 function PageHeading({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+    <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end border-b border-slate-200/80 pb-5">
       <div>
-        <p className="mb-1 text-xs font-semibold uppercase tracking-[.18em] text-teal-700">{eyebrow}</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-[#123746] lg:text-3xl">{title}</h1>
-        <p className="mt-1 text-sm text-slate-500">{description}</p>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="inline-block size-2 rounded-full bg-amber-500" />
+          <p className="text-[11px] font-bold uppercase tracking-[.18em] text-slate-500 font-mono">{eyebrow}</p>
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 lg:text-3xl">{title}</h1>
+        <p className="mt-1 text-sm text-slate-600 max-w-3xl leading-relaxed">{description}</p>
       </div>
-      {action}
+      {action && <div className="flex items-center gap-2 shrink-0">{action}</div>}
     </div>
   )
 }
 
 function Kpi({ label, value, note, icon: Icon, children }: { label: string; value: string; note: string; icon: typeof Map; children?: React.ReactNode }) {
   return (
-    <Card className="border-slate-200 shadow-none">
-      <CardContent className="p-4">
+    <Card className="border-slate-200/90 bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] hover:shadow-md transition-shadow rounded-xl overflow-hidden">
+      <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs font-medium text-slate-500">{label}</p>
-            <p className="mt-2 text-2xl font-semibold text-[#123746]">{value}</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 font-mono">{label}</p>
+            <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900 font-mono">{value}</p>
           </div>
-          <div className="rounded-lg bg-[#e6f2f2] p-2 text-teal-700">
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 text-slate-700 shadow-2xs">
             <Icon className="size-4" />
           </div>
         </div>
-        {children ?? <p className="mt-2 text-xs text-slate-500">{note}</p>}
+        {children ?? <p className="mt-3 text-xs text-slate-500 font-medium flex items-center gap-1.5">{note}</p>}
       </CardContent>
     </Card>
   )
 }
+
 
 interface GisSurroundingLandRecord {
   id: string
@@ -358,7 +448,7 @@ const GIS_PROJECT_SITES: GisProjectSite[] = [
     location: "Ulwe & Panvel, Raigad, Maharashtra",
     agency: "CIDCO & Adani Airport Holdings (NMIAL)",
     category: "Airport",
-    icon: "✈️",
+    icon: "Plane",
     totalArea: "1,160 ha",
     acquiredPct: 98,
     imageUrl: "/gis_navi_mumbai_airport.jpg",
@@ -442,7 +532,7 @@ const GIS_PROJECT_SITES: GisProjectSite[] = [
     location: "Palghar & Surat Alignment (Chainage 114+200)",
     agency: "NHSRCL (National High Speed Rail Corp)",
     category: "High-Speed Rail",
-    icon: "🚄",
+    icon: "TrainFront",
     totalArea: "825 ha",
     acquiredPct: 94,
     imageUrl: "/gis_bullet_train_corridor.jpg",
@@ -526,7 +616,7 @@ const GIS_PROJECT_SITES: GisProjectSite[] = [
     location: "Vadodara-Bharuch Sector, Gujarat",
     agency: "National Highways Authority of India (NHAI)",
     category: "Expressway",
-    icon: "🛣️",
+    icon: "Navigation",
     totalArea: "640 ha",
     acquiredPct: 99,
     imageUrl: "/gis_delhi_mumbai_expressway.jpg",
@@ -610,7 +700,7 @@ const GIS_PROJECT_SITES: GisProjectSite[] = [
     location: "Haveli & Mulshi, Maharashtra",
     agency: "MSRDC (Maharashtra State Road Dev Corp)",
     category: "Corridor",
-    icon: "🏔️",
+    icon: "Compass",
     totalArea: "49.95 ha",
     acquiredPct: 86,
     imageUrl: "/satellite_map.jpg",
@@ -912,17 +1002,17 @@ function MapCard() {
   }
 
   return (
-    <Card className={`overflow-hidden border-slate-200 shadow-none transition-all duration-300 ${isCinemaMode ? 'xl:col-span-2' : ''}`}>
-      <CardHeader className="space-y-3 pb-3">
+    <Card className={`overflow-hidden border-slate-200 bg-white shadow-xs transition-all duration-300 rounded-xl ${isCinemaMode ? 'xl:col-span-2' : ''}`}>
+      <CardHeader className="space-y-3 pb-3 border-b border-slate-100">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base text-[#123746]">National Infrastructure GIS Geofence</CardTitle>
-              <Badge variant="outline" className="gap-1 border-teal-200 bg-teal-50 text-teal-700 text-xs font-normal">
-                <span className="size-1.5 rounded-full bg-teal-500 animate-pulse" /> Live Cartosat-3 / Sentinel-2
+              <CardTitle className="text-base text-slate-900 font-bold tracking-tight">National Infrastructure GIS Geofence</CardTitle>
+              <Badge variant="outline" className="gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-800 text-[11px] font-mono font-medium">
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Cartosat-3 / Sentinel-2
               </Badge>
             </div>
-            <CardDescription className="text-xs">
+            <CardDescription className="text-xs text-slate-500">
               Real-time satellite orthomosaics with sub-meter PostGIS spatial demarcation overlays
             </CardDescription>
           </div>
@@ -932,19 +1022,20 @@ function MapCard() {
               variant="outline"
               size="sm"
               onClick={() => setIsCinemaMode(!isCinemaMode)}
-              className="h-8 gap-1 text-xs border-slate-200 text-slate-700 hover:bg-slate-50"
-              title={isCinemaMode ? "Normal View" : "Theatre / Cinema View"}
+              className="h-8 gap-1.5 text-xs border-slate-300 bg-white text-slate-700 hover:bg-slate-50 shadow-2xs font-medium"
+              title={isCinemaMode ? "Standard Grid View" : "Full Viewport / Cinema Mode"}
             >
               {isCinemaMode ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
-              <span>{isCinemaMode ? "Standard" : "Cinema"}</span>
+              <span>{isCinemaMode ? "Standard" : "Cinema Mode"}</span>
             </Button>
           </div>
         </div>
 
-        {/* Project Selector Navigation Pills */}
-        <div className="grid grid-cols-2 gap-1.5 rounded-lg bg-slate-100/80 p-1 sm:grid-cols-4">
+        {/* Project Selector Navigation Segmented Controls */}
+        <div className="grid grid-cols-2 gap-1.5 rounded-xl bg-slate-100 p-1 sm:grid-cols-4 border border-slate-200/90">
           {GIS_PROJECT_SITES.map((site) => {
             const isSelected = site.id === selectedSiteId
+            const SiteIcon = site.id === "nmia" ? Plane : site.id === "mahsr" ? TrainFront : site.id === "dme" ? Navigation : Compass
             return (
               <button
                 key={site.id}
@@ -956,16 +1047,18 @@ function MapCard() {
                   setZoom(1)
                   setPan({ x: 0, y: 0 })
                 }}
-                className={`flex items-center gap-2 rounded-md px-3 py-2 text-left text-xs font-medium transition-all ${
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium transition-all ${
                   isSelected
-                    ? "bg-white text-[#0b5664] shadow-sm ring-1 ring-slate-200 font-semibold"
+                    ? "bg-white text-slate-950 shadow-xs ring-1 ring-slate-300/80 font-bold"
                     : "text-slate-600 hover:bg-white/60 hover:text-slate-900"
                 }`}
               >
-                <span className="text-base leading-none">{site.icon}</span>
+                <div className={`grid size-7 shrink-0 place-items-center rounded-md ${isSelected ? 'bg-slate-900 text-white' : 'bg-slate-200/80 text-slate-700'}`}>
+                  <SiteIcon className="size-3.5" />
+                </div>
                 <div className="min-w-0 flex-1 truncate">
-                  <p className="truncate leading-tight">{site.shortName}</p>
-                  <p className="truncate text-[10px] text-slate-400">{site.acquiredPct}% acquired</p>
+                  <p className="truncate leading-tight font-semibold">{site.shortName}</p>
+                  <p className="truncate text-[10px] text-slate-500 font-mono">{site.acquiredPct}% acquired</p>
                 </div>
               </button>
             )
@@ -973,16 +1066,16 @@ function MapCard() {
         </div>
 
         {/* Project Technical Meta Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 rounded-md border border-slate-200/70 bg-slate-50/60 px-3 py-1.5 text-[11px] text-slate-600">
-          <div className="flex items-center gap-3">
-            <span className="font-semibold text-slate-800">{currentProject.name}</span>
-            <span className="text-slate-400">|</span>
-            <span className="text-slate-500">{currentProject.location}</span>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2 text-[11px] text-slate-600 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <span className="font-bold text-slate-900">{currentProject.name}</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-600">{currentProject.location}</span>
           </div>
           <div className="flex items-center gap-4 font-mono text-[10px] text-slate-500">
-            <span>Agency: <strong className="font-semibold text-slate-700">{currentProject.agency}</strong></span>
-            <span>Sensor: <strong>{currentProject.sensor}</strong></span>
-            <span>GPS: <strong>{currentProject.coordinates}</strong></span>
+            <span>Agency: <strong className="font-semibold text-slate-800">{currentProject.agency}</strong></span>
+            <span>Sensor: <strong className="text-slate-700">{currentProject.sensor}</strong></span>
+            <span>GPS: <strong className="text-slate-700">{currentProject.coordinates}</strong></span>
           </div>
         </div>
       </CardHeader>
@@ -1147,7 +1240,7 @@ function MapCard() {
                 <RotateCcw className="size-3.5" />
               </Button>
               <Separator orientation="vertical" className="h-4 mx-0.5" />
-              <div className="px-2 font-mono text-[10px] font-semibold text-[#0b5664]">
+              <div className="px-2 font-mono text-[10px] font-bold text-slate-900">
                 {zoom.toFixed(1)}x
               </div>
             </div>
@@ -1163,7 +1256,7 @@ function MapCard() {
           {activeParcel && (
             <div className="absolute top-3 left-3 z-20 max-w-[320px] rounded-lg border border-teal-500/80 bg-white/95 p-3 text-xs shadow-lg backdrop-blur animate-in fade-in-50 duration-150">
               <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="font-semibold text-[#123746] truncate">{activeParcel.name}</span>
+                <span className="font-semibold text-slate-900 truncate">{activeParcel.name}</span>
                 <Status>{activeParcel.status}</Status>
               </div>
               <p className="text-[11px] text-slate-600 leading-snug">{activeParcel.details}</p>
@@ -1296,7 +1389,7 @@ function MapCard() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <div className="flex items-center justify-between gap-2">
-                <DialogTitle className="text-base text-[#123746]">
+                <DialogTitle className="text-base text-slate-900">
                   {selectedParcel?.name}
                 </DialogTitle>
                 {selectedParcel && <Status>{selectedParcel.status}</Status>}
@@ -1585,10 +1678,10 @@ function Dashboard() {
         description="A consolidated view of land acquisition progress, statutory milestones, and compliance."
         action={
           <Button
-            className={`transition-all duration-200 ${
+            className={`transition-all duration-200 shadow-xs font-medium ${
               downloadSuccess
                 ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                : "bg-[#0b5664] hover:bg-[#083f4a]"
+                : "bg-slate-900 hover:bg-slate-800 text-white"
             }`}
             onClick={handleDownloadReport}
           >
@@ -1599,7 +1692,7 @@ function Dashboard() {
               </>
             ) : (
               <>
-                <Download className="mr-2 size-4" /> Download MIS report
+                <Download className="mr-2 size-4" /> Download Executive MIS Report
               </>
             )}
           </Button>
@@ -1742,7 +1835,7 @@ function Dashboard() {
       <Card className="mt-5 border-slate-200 shadow-none">
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="text-base text-[#123746]">Active Land Acquisition Projects</CardTitle>
+            <CardTitle className="text-base text-slate-900">Active Land Acquisition Projects</CardTitle>
             <CardDescription className="text-xs">
               Statutory progress schedule & litigation risk oversight
             </CardDescription>
@@ -1951,9 +2044,9 @@ function Scrutiny({
               : "Proposal registered. Awaiting CALA review and AI Scrutiny run."}
           </p>
           {user?.role === "CALA" && (
-            <Button onClick={handleTrigger} disabled={triggering} className="bg-[#0b5664] hover:bg-[#083f4a]">
-              {triggering ? <Spinner className="mr-2 text-white size-4" /> : <ShieldCheck data-icon="inline-start" />}
-              {triggering ? "Running AI Agents..." : "Run AI Scrutiny"}
+            <Button onClick={handleTrigger} disabled={triggering} className="bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-xs">
+              {triggering ? <Spinner className="mr-2 text-white size-4" /> : <ShieldCheck className="mr-2 size-4 text-emerald-400" />}
+              {triggering ? "Executing Statutory Scrutiny Agents..." : "Run AI Statutory Scrutiny"}
             </Button>
           )}
         </div>
@@ -2059,8 +2152,8 @@ function Scrutiny({
                           <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setResolvingId(null)}>
                             Cancel
                           </Button>
-                          <Button size="sm" className="bg-[#0b5664] hover:bg-[#083f4a] text-xs h-7" onClick={() => handleResolveObjection(o.id)}>
-                            Submit Resolution
+                          <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white text-xs h-7 shadow-xs font-medium" onClick={() => handleResolveObjection(o.id)}>
+                            Submit Statutory Resolution
                           </Button>
                         </div>
                       </div>
@@ -2121,7 +2214,7 @@ function Scrutiny({
           {user?.role === "CALA" && nextStages.map((stage) => (
             <Button
               key={stage}
-              className="bg-[#0b5664] hover:bg-[#083f4a] text-xs h-8"
+              className="bg-slate-900 hover:bg-slate-800 text-white text-xs h-8 shadow-xs font-semibold"
               disabled={transitioning || loadingReport}
               onClick={() => handleTransition(stage)}
             >
@@ -2236,7 +2329,7 @@ function Workbench() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base text-[#123746]">Proposals</CardTitle>
+              <CardTitle className="text-base text-slate-900">Proposals</CardTitle>
               <CardDescription>
                 {loading ? "Loading..." : `${proposals.length} proposals in your scope`}
               </CardDescription>
@@ -2316,10 +2409,18 @@ function Workbench() {
 
             <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-1.5">
               <p className="text-xs font-semibold text-slate-800">{proposalToDelete.project_name}</p>
-              <div className="flex flex-wrap gap-2 text-[11px] text-slate-500">
-                <span>📍 {proposalToDelete.district}, {proposalToDelete.state}</span>
-                <span>📐 {fmtHectares(proposalToDelete.area_hectares)}</span>
-                <span>Milestone: {STAGE_LABELS[proposalToDelete.stage]}</span>
+              <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+                <span className="flex items-center gap-1">
+                  <MapPin className="size-3 text-slate-400" />
+                  {proposalToDelete.district}, {proposalToDelete.state}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Layers className="size-3 text-slate-400" />
+                  {fmtHectares(proposalToDelete.area_hectares)}
+                </span>
+                <span className="rounded bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-medium text-slate-700">
+                  {STAGE_LABELS[proposalToDelete.stage]}
+                </span>
               </div>
             </div>
 
@@ -2734,17 +2835,17 @@ function SubmitProposal() {
         action={
           <div className="flex flex-wrap items-center gap-2">
             {activeScenarioLabel && (
-              <span className="inline-flex items-center text-xs font-medium text-teal-800 bg-teal-50 border border-teal-200 px-2.5 py-1 rounded-full animate-in fade-in zoom-in-95">
-                <Sparkles className="mr-1 size-3 text-teal-600" /> Loaded: {activeScenarioLabel}
+              <span className="inline-flex items-center text-xs font-semibold text-slate-800 bg-slate-100 border border-slate-300 px-3 py-1 rounded-md animate-in fade-in font-mono">
+                <CheckCircle2 className="mr-1.5 size-3.5 text-emerald-600" /> Template: {activeScenarioLabel}
               </span>
             )}
             <Button
               variant="outline"
               size="sm"
               onClick={loadDemoScenario}
-              className="border-teal-300 text-teal-800 hover:bg-teal-50 shadow-xs"
+              className="border-slate-300 bg-white text-slate-800 hover:bg-slate-50 shadow-2xs font-semibold text-xs h-8"
             >
-              <Sparkles className="mr-1.5 size-4 text-teal-600" /> Load Random Scenario ({DEMO_SCENARIOS.length})
+              <RefreshCw className="mr-1.5 size-3.5 text-slate-600" /> Load Benchmark Corridor Template
             </Button>
           </div>
         }
@@ -2769,7 +2870,7 @@ function SubmitProposal() {
           {/* Section 1: Project Details */}
           <Card className="border-slate-200 shadow-none">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-[#123746]">
+              <CardTitle className="flex items-center gap-2 text-base text-slate-900">
                 <Building2 className="size-5 text-teal-700" />
                 1. Project details &amp; justification
               </CardTitle>
@@ -2849,7 +2950,7 @@ function SubmitProposal() {
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <CardTitle className="flex items-center gap-2 text-base text-[#123746]">
+                  <CardTitle className="flex items-center gap-2 text-base text-slate-900">
                     <MapPin className="size-5 text-teal-700" />
                     2. Land parcel &amp; GPS polygon boundary
                   </CardTitle>
@@ -2921,7 +3022,7 @@ function SubmitProposal() {
           {/* Section 3: Statutory Document Upload */}
           <Card className="border-slate-200 shadow-none">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base text-[#123746]">
+              <CardTitle className="flex items-center gap-2 text-base text-slate-900">
                 <FileText className="size-5 text-teal-700" />
                 3. Statutory document submission (Title Deed / 7-12)
               </CardTitle>
@@ -2996,7 +3097,7 @@ function SubmitProposal() {
                       size="sm"
                       onClick={() => handleAutoAttachDocument()}
                       disabled={attachingDoc}
-                      className="h-7 bg-[#0b5664] hover:bg-[#083f4a] text-white text-xs px-2.5"
+                      className="h-7 bg-slate-900 hover:bg-slate-800 text-white text-xs px-2.5 font-medium shadow-2xs"
                     >
                       {attachingDoc ? (
                         <>
@@ -3004,7 +3105,7 @@ function SubmitProposal() {
                         </>
                       ) : (
                         <>
-                          <Sparkles className="mr-1 size-3 text-teal-200" /> Auto-Attach Matching Deed
+                          <CheckCircle2 className="mr-1 size-3 text-emerald-400" /> Auto-Attach Matching Deed
                         </>
                       )}
                     </Button>
@@ -3057,7 +3158,7 @@ function SubmitProposal() {
                 Cancel
               </Button>
               <Button
-                className="bg-[#0b5664] hover:bg-[#083f4a]"
+                className="bg-slate-900 hover:bg-slate-800 text-white shadow-xs font-semibold"
                 disabled={submitting || success}
                 onClick={handleSubmit}
               >
@@ -3067,7 +3168,7 @@ function SubmitProposal() {
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 className="mr-2 size-4" /> Submit Proposal &amp; Demarcation
+                    <CheckCircle2 className="mr-2 size-4 text-emerald-400" /> Submit Proposal &amp; Demarcation
                   </>
                 )}
               </Button>
@@ -3079,7 +3180,7 @@ function SubmitProposal() {
         <div className="flex flex-col gap-5">
           <Card className="border-slate-200 shadow-none">
             <CardHeader>
-              <CardTitle className="text-base text-[#123746]">Acquisition stages</CardTitle>
+              <CardTitle className="text-base text-slate-900">Acquisition stages</CardTitle>
               <CardDescription>Track statutory lifecycle milestones</CardDescription>
             </CardHeader>
             <CardContent>
@@ -3110,7 +3211,7 @@ function SubmitProposal() {
 
           <Card className="border-slate-200 bg-[#e8f3f2] shadow-none">
             <CardContent className="p-5">
-              <p className="text-sm font-semibold text-[#123746]">Automated Scrutiny Flow</p>
+              <p className="text-sm font-semibold text-slate-900">Automated Scrutiny Flow</p>
               <p className="mt-1 text-xs leading-5 text-slate-600">
                 Upon submission, your proposal is submitted to the District CALA. The AI Orchestrator cross-audits:
               </p>
@@ -3223,7 +3324,7 @@ function FieldSurvey() {
       <div className="mx-auto max-w-2xl">
         <Card className="border-slate-200 shadow-none">
           <CardHeader>
-            <CardTitle className="text-base text-[#123746]">Assigned acquisition project</CardTitle>
+            <CardTitle className="text-base text-slate-900">Assigned acquisition project</CardTitle>
             <CardDescription>Select project assignment and conduct on-site boundary verification</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
@@ -3251,10 +3352,10 @@ function FieldSurvey() {
 
             {/* Camera capture */}
             <label className="cursor-pointer">
-              <div className="flex h-32 flex-col items-center justify-center gap-3 rounded-xl bg-[#0b5664] text-base text-white hover:bg-[#083f4a] transition-colors shadow-sm">
-                <Camera className="size-9" />
-                <span>{uploading ? "Geotagging & Uploading..." : "Capture & Geotag Site Photo"}</span>
-                <span className="text-[11px] text-teal-200">Automatically stamps device location and timestamp</span>
+              <div className="flex h-32 flex-col items-center justify-center gap-3 rounded-xl bg-slate-900 text-base text-white hover:bg-slate-800 transition-colors shadow-sm border border-slate-800">
+                <Camera className="size-8 text-amber-400" />
+                <span className="font-semibold">{uploading ? "Geotagging & Uploading..." : "Capture & Geotag Site Photo"}</span>
+                <span className="text-[11px] text-slate-400 font-mono">Automatically stamps GNSS coordinates &amp; timestamp</span>
               </div>
               <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileCapture} />
             </label>
@@ -3446,7 +3547,7 @@ function MyLand() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg text-[#123746]">
+                <CardTitle className="text-lg text-slate-900">
                   {activeParcel ? `Parcel ${activeParcel.ulpin || activeParcel.id.slice(0, 8)}` : "Parcel MH1234567890"}
                 </CardTitle>
                 <CardDescription>
@@ -3501,8 +3602,8 @@ function MyLand() {
                       onChange={(e) => setObjReason(e.target.value)}
                     />
                   </label>
-                  <Button className="bg-[#0b5664] hover:bg-[#083f4a]" disabled={objSubmitting} onClick={handleObjection}>
-                    {objSubmitting ? "Submitting to District Authority..." : "Submit objection"}
+                  <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-xs font-semibold" disabled={objSubmitting} onClick={handleObjection}>
+                    {objSubmitting ? "Submitting to District Authority..." : "Submit Formal Objection"}
                   </Button>
                 </div>
               </DialogContent>
@@ -3537,11 +3638,11 @@ function MyLand() {
         <div className="flex flex-col gap-5">
           <Card className="border-slate-200 shadow-none">
             <CardHeader>
-              <CardTitle className="text-base text-[#123746]">Compensation award</CardTitle>
+              <CardTitle className="text-base text-slate-900">Compensation award</CardTitle>
               <CardDescription>Assessed as per RFCTLARR Act 2013</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-[#123746]">{fmtINR(totalAssessed)}</p>
+              <p className="text-3xl font-semibold text-slate-900">{fmtINR(totalAssessed)}</p>
               <div className="mt-3">
                 <Status>{compStatus}</Status>
                 {compStatus === "PAID" ? (
@@ -3560,7 +3661,7 @@ function MyLand() {
 
           <Card className="border-slate-200 bg-[#e8f3f2] shadow-none">
             <CardContent className="p-5">
-              <p className="text-sm font-semibold text-[#123746]">Need help with your case?</p>
+              <p className="text-sm font-semibold text-slate-900">Need help with your case?</p>
               <p className="mt-1 text-xs leading-5 text-slate-600">Free citizen support in your regional language.</p>
               <Button
                 variant="outline"
@@ -3578,7 +3679,7 @@ function MyLand() {
       <Dialog open={helpDialogOpen} onOpenChange={setHelpDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base text-[#123746]">
+            <DialogTitle className="flex items-center gap-2 text-base text-slate-900">
               <PhoneCall className="size-5 text-teal-700" /> Citizen Support &amp; Grievance Redressal
             </DialogTitle>
             <DialogDescription>
@@ -3610,7 +3711,7 @@ function MyLand() {
       <Dialog open={voiceModalOpen} onOpenChange={setVoiceModalOpen}>
         <DialogContent className="max-w-md text-center">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-center gap-2 text-base text-[#123746]">
+            <DialogTitle className="flex items-center justify-center gap-2 text-base text-slate-900">
               <Volume2 className="size-5 text-teal-700" /> Bhashini AI Multilingual Voice Assistant
             </DialogTitle>
             <DialogDescription>
@@ -3639,15 +3740,19 @@ function MyLand() {
         </DialogContent>
       </Dialog>
 
-      {/* Voice FAB */}
-      <Button
-        size="icon"
-        onClick={() => setVoiceModalOpen(true)}
-        className="fixed bottom-6 right-6 size-14 rounded-full bg-[#0b5664] shadow-xl hover:bg-[#083f4a] hover:scale-105 transition-all"
-        aria-label="Ask in Hindi Marathi Telugu"
-      >
-        <Mic className="size-6 text-white" />
-      </Button>
+      {/* Bhashini Multilingual Accessibility Assistance Widget */}
+      <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2">
+        <Button
+          onClick={() => setVoiceModalOpen(true)}
+          className="h-11 rounded-full bg-slate-900 px-4 text-xs font-semibold text-white shadow-xl hover:bg-slate-800 hover:scale-102 transition-all border border-slate-700/80 flex items-center gap-2"
+          aria-label="Bhashini Regional Language Support (Hindi, Marathi, Telugu)"
+        >
+          <div className="grid size-6 place-items-center rounded-full bg-amber-500/20 text-amber-400">
+            <Mic className="size-3.5" />
+          </div>
+          <span className="hidden sm:inline">भाषिणी Regional Audio Help</span>
+        </Button>
+      </div>
     </>
   )
 }

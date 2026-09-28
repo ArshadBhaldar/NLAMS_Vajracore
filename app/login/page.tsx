@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, Building2, Scale, UserCheck, BarChart3, Camera, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react"
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -18,124 +18,225 @@ export default function LoginPage() {
     try {
       await login(email, password)
     } catch (err: any) {
-      setError(err.message || "Login failed")
+      setError(err.message || "Authentication failed. Check statutory credentials.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#082b3a]">
-      <div className="w-full max-w-md space-y-8 p-8">
-        {/* Branding */}
-        <div className="text-center">
-          <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-teal-400 text-[#082b3a]">
-            <ShieldCheck className="size-8" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
-            NLAMS <span className="text-teal-300">2.0</span>
-          </h1>
-          <p className="mt-1 text-xs uppercase tracking-[.2em] text-slate-400">
-            Government of India
-          </p>
-          <p className="mt-4 text-sm text-slate-300">
-            National Land Acquisition &amp; Management System
-          </p>
-        </div>
+    <div className="relative flex min-h-screen flex-col justify-between bg-[#0A0F1D] text-slate-100 antialiased selection:bg-amber-500/30 selection:text-amber-200">
+      {/* Statutory Tricolor Ribbon */}
+      <div className="h-[3.5px] w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] shadow-sm" />
 
-        {/* Login Card */}
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur"
-        >
-          <h2 className="mb-6 text-lg font-semibold text-white">Sign in</h2>
-
-          {error && (
-            <div className="mb-4 rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-              {error}
+      {/* Institutional Top Bar */}
+      <header className="border-b border-slate-800/80 bg-slate-900/60 px-6 py-2.5 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex size-7 items-center justify-center rounded-md border border-slate-700 bg-slate-800">
+              <ShieldCheck className="size-4 text-amber-400" />
             </div>
-          )}
-
-          <label className="mb-4 flex flex-col gap-2 text-sm font-medium text-slate-300">
-            Email address
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. cala.pune@demo.gov.in"
-              className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
-            />
-          </label>
-
-          <label className="mb-6 flex flex-col gap-2 text-sm font-medium text-slate-300">
-            Password
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
-            />
-          </label>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-teal-500 px-4 py-3 text-sm font-semibold text-[#082b3a] transition-colors hover:bg-teal-400 disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign in"}
-          </button>
-
-          {/* 1-Click Demo accounts */}
-          <div className="mt-6 rounded-xl border border-white/10 bg-white/5 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-teal-300">
-                1-Click Demo Login
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+                भारत सरकार | Government of India
               </p>
-              <span className="text-[11px] text-slate-400">Password: <code>Demo@1234</code></span>
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {[
-                { role: "Requiring Body", email: "nhai@demo.gov.in", label: "NHAI Portal", icon: "🏗️" },
-                { role: "CALA (Collector)", email: "cala.pune@demo.gov.in", label: "District CALA", icon: "⚖️" },
-                { role: "Citizen", email: "ganesh.patil@demo.gov.in", label: "Ganesh Patil", icon: "🧑‍🌾" },
-                { role: "State Monitor", email: "monitor@demo.gov.in", label: "National Oversight", icon: "📈" },
-                { role: "Field Surveyor", email: "surveyor.anita@demo.gov.in", label: "Field Survey", icon: "📷", fullWidth: true },
-              ].map((item) => (
-                <button
-                  key={item.email}
-                  type="button"
-                  disabled={loading}
-                  onClick={async () => {
-                    setEmail(item.email)
-                    setPassword("Demo@1234")
-                    setError("")
-                    setLoading(true)
-                    try {
-                      await login(item.email, "Demo@1234")
-                    } catch (err: any) {
-                      setError(err.message || "Login failed")
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  className={`flex items-center gap-2.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left transition-all hover:border-teal-400/50 hover:bg-white/10 ${
-                    item.fullWidth ? "sm:col-span-2" : ""
-                  }`}
-                >
-                  <span className="text-base">{item.icon}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-white">{item.role}</p>
-                    <p className="truncate text-[10px] text-slate-400">{item.label}</p>
-                  </div>
-                </button>
-              ))}
+              <p className="text-[10px] text-slate-400">
+                Digital Public Infrastructure for Land Governance (RFCTLARR 2013)
+              </p>
             </div>
           </div>
-        </form>
-      </div>
+          <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-400">
+            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            NIC SSO 2.0 Identity Gateway Active
+          </div>
+        </div>
+      </header>
+
+      {/* Main Login Workspace */}
+      <main className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md space-y-6">
+          {/* Official Emblem & Portal Title */}
+          <div className="text-center">
+            <div className="mx-auto mb-3.5 flex size-14 items-center justify-center rounded-2xl border border-slate-700/80 bg-gradient-to-b from-slate-800 to-slate-900 shadow-xl shadow-black/40">
+              <ShieldCheck className="size-7 text-amber-400" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              NLAMS <span className="font-semibold text-amber-400">Vajracore</span>
+            </h1>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
+              National Land Acquisition &amp; Management System
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              Statutory Multi-Authority Single Sign-On Portal
+            </p>
+          </div>
+
+          {/* Login Card */}
+          <div className="rounded-2xl border border-slate-800/90 bg-slate-900/80 p-7 shadow-2xl backdrop-blur-xl">
+            <div className="mb-5 flex items-center justify-between border-b border-slate-800 pb-3">
+              <h2 className="text-sm font-semibold tracking-wide text-white">
+                Officer Authentication
+              </h2>
+              <span className="text-[11px] font-mono text-slate-400">Secured via NIC-eGov</span>
+            </div>
+
+            {error && (
+              <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-300">
+                  Official Email ID / NIC UID
+                </label>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                    <Mail className="size-4" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. cala.pune@demo.gov.in"
+                    className="w-full rounded-lg border border-slate-700/80 bg-slate-800/70 pl-9 pr-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-medium text-slate-300">
+                    Passphrase / Token
+                  </label>
+                  <span className="text-[10px] text-slate-400">Default: Demo@1234</span>
+                </div>
+                <div className="relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                    <Lock className="size-4" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full rounded-lg border border-slate-700/80 bg-slate-800/70 pl-9 pr-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-900 transition-all hover:bg-white hover:shadow-md disabled:opacity-50"
+              >
+                {loading ? "Authenticating..." : "Authorize Statutory Session"}
+                <ArrowRight className="size-3.5" />
+              </button>
+            </form>
+
+            {/* Statutory Benchmark Fast-Access Accounts */}
+            <div className="mt-6 border-t border-slate-800/80 pt-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400/90">
+                  Pre-Configured Authority Contexts
+                </p>
+                <span className="text-[10px] font-mono text-slate-400">1-Click Verification</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2">
+                {[
+                  {
+                    role: "Competent Authority (CALA)",
+                    agency: "District Revenue Collector / SLAO",
+                    email: "cala.pune@demo.gov.in",
+                    icon: Scale,
+                  },
+                  {
+                    role: "Project Proponent (NHAI)",
+                    agency: "National Highways & Infrastructure",
+                    email: "nhai@demo.gov.in",
+                    icon: Building2,
+                  },
+                  {
+                    role: "Citizen Landowner",
+                    agency: "Direct Benefit Beneficiary (DBT)",
+                    email: "ganesh.patil@demo.gov.in",
+                    icon: UserCheck,
+                  },
+                  {
+                    role: "National Oversight (MoRTH)",
+                    agency: "Central Monitoring & Apex Scrutiny",
+                    email: "monitor@demo.gov.in",
+                    icon: BarChart3,
+                  },
+                  {
+                    role: "Field Cadastral Surveyor",
+                    agency: "On-Ground PostGIS Verification Officer",
+                    email: "surveyor.anita@demo.gov.in",
+                    icon: Camera,
+                  },
+                ].map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <button
+                      key={item.email}
+                      type="button"
+                      disabled={loading}
+                      onClick={async () => {
+                        setEmail(item.email)
+                        setPassword("Demo@1234")
+                        setError("")
+                        setLoading(true)
+                        try {
+                          await login(item.email, "Demo@1234")
+                        } catch (err: any) {
+                          setError(err.message || "Login failed")
+                        } finally {
+                          setLoading(false)
+                        }
+                      }}
+                      className="group flex items-center justify-between rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2 text-left transition hover:border-slate-600 hover:bg-slate-800/80"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="flex size-7 shrink-0 items-center justify-center rounded-md border border-slate-700 bg-slate-800 text-slate-300 group-hover:text-amber-400">
+                          <Icon className="size-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-medium text-slate-200 group-hover:text-white">
+                            {item.role}
+                          </p>
+                          <p className="truncate text-[10px] text-slate-400">
+                            {item.agency}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="shrink-0 text-[10px] font-mono text-slate-500 group-hover:text-slate-300">
+                        Login →
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Legal / Statutory Footer */}
+          <div className="text-center text-[11px] text-slate-400 space-y-1">
+            <p>Empowered under Right to Fair Compensation and Transparency in Land Acquisition (RFCTLARR 2013)</p>
+            <p className="text-[10px] text-slate-400">NIC National Data Centre &bull; MoRTH &bull; PM GatiShakti National Master Plan</p>
+          </div>
+        </div>
+      </main>
+
+      {/* Bottom Bar */}
+      <footer className="border-t border-slate-800/80 bg-slate-900/60 py-3 text-center text-[10px] text-slate-400">
+        &copy; 2026 National Land Acquisition &amp; Management System (NLAMS 2.0). All Rights Reserved.
+      </footer>
     </div>
   )
 }
+
