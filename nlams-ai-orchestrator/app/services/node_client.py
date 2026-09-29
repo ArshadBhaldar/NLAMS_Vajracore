@@ -8,7 +8,7 @@ class NodeClient:
     """
 
     def __init__(self):
-        self.base_url = settings.NODE_BACKEND_URL
+        self.base_url = (settings.NODE_BACKEND_URL or "http://localhost:4000").rstrip('/')
         self.headers = {"X-Service-Key": settings.AI_SERVICE_KEY}
 
     async def get_proposal_package(self, proposal_id: str) -> dict:

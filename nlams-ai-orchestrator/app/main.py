@@ -35,6 +35,8 @@ async def orchestrate(proposal_id: str, body: OrchestrateRequest = OrchestrateRe
         result = await orchestrate_scrutiny(proposal_id, land_type=body.land_type)
         return result
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=502, detail=f"Orchestration failed: {exc}")
 
 
