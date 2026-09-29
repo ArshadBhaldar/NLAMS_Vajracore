@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const db = require('../config/db');
 
 async function getProposalPackage(req, res) {
@@ -56,7 +57,12 @@ async function downloadDocument(req, res) {
 
     const { storage_path, filename } = result.rows[0];
     const absolutePath = path.resolve(storage_path);
-    
+
+    if (!fs.existsSync(absolutePath)) {
+      console.warn(`[downloadDocument] Document physical file not found at ${absolutePath}`);
+      return res.status(404).json({ error: 'Document physical file not found on disk' });
+    }
+
     res.download(absolutePath, filename);
   } catch (error) {
     console.error('Error downloading document:', error);

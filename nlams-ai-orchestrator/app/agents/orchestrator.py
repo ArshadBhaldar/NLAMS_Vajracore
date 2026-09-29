@@ -14,8 +14,13 @@ async def _get_latest_title_deed_text(documents: list) -> str:
         return ""
 
     latest = max(deed_docs, key=lambda d: d.get("version", 0))
-    pdf_bytes = await node_client.download_document(latest["id"])
-    return extract_text_from_pdf_bytes(pdf_bytes)
+    try:
+        pdf_bytes = await node_client.download_document(latest["id"])
+        return extract_text_from_pdf_bytes(pdf_bytes)
+    except Exception as exc:
+        print(f"[Orchestrator] Notice: Could not download or parse title deed ({latest.get('id')}): {exc}. Proceeding with unreadable fallback.")
+        return ""
+
 
 
 async def orchestrate_scrutiny(proposal_id: str, land_type: str = "AGRICULTURAL") -> dict:
