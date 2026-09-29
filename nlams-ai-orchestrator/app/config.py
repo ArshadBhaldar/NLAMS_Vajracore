@@ -5,7 +5,7 @@ load_dotenv()
 
 class Settings:
     NODE_BACKEND_URL: str = os.getenv("NODE_BACKEND_URL", "http://localhost:4000")
-    AI_SERVICE_KEY: str = os.getenv("AI_SERVICE_KEY", "")
+    AI_SERVICE_KEY: str = os.getenv("AI_SERVICE_KEY", "vajra_internal_service_key_2026")
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     # When no ANTHROPIC_API_KEY is set, the Legal Scrutinizer Agent falls back
     # to a deterministic keyword/regex heuristic instead of an LLM call.
