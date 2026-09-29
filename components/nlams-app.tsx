@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -11,6 +11,7 @@ import {
   MapPin, CheckCircle2, AlertCircle, Trash2, Sparkles, Download, PhoneCall, Volume2, Navigation, Send, Radio, RefreshCw,
   Plane, TrainFront, Layers, Maximize2, Minimize2, ZoomIn, Eye, EyeOff,
   ZoomOut, RotateCcw, Crosshair, MousePointerClick, Locate, Compass,
+  Lock, Scale, Fingerprint, FileSignature, Award, PenTool, Printer, ShieldAlert,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,6 +31,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import dynamic from "next/dynamic"
+import { VajraBhoomiLogo } from "@/components/vajrabhoomi-logo"
+import UrbanCadastralMap from "@/components/urban-cadastral-map"
+
+const NationalGisLeafletMap = dynamic(
+  () => import("@/components/national-gis-leaflet-map"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[410px] w-full flex-col items-center justify-center gap-3 bg-slate-900 text-white rounded-xl">
+        <Loader2 className="size-8 animate-spin text-emerald-400" />
+        <p className="text-xs font-mono text-slate-400">Loading National OpenStreetMap GIS Engine...</p>
+      </div>
+    ),
+  }
+)
 
 import { useAuth } from "@/lib/auth-context"
 import { api, ApiError } from "@/lib/api"
@@ -53,21 +70,25 @@ const DEMO_PERSONAS: { role: UserRole; name: string; email: string; dept: string
 const navByRole: Record<UserRole, { label: string; href: string; icon: typeof LayoutDashboard }[]> = {
   STATE_MONITOR: [
     { label: "National GIS Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { label: "Urban Cadastral Map", href: "/cadastral-map", icon: Map },
     { label: "Project Workbench", href: "/workbench", icon: FolderKanban },
     { label: "Audit Reports & Analytics", href: "/dashboard", icon: FileCheck2 },
   ],
   REQUIRING_BODY: [
     { label: "Corridor Portfolios", href: "/dashboard", icon: Building2 },
+    { label: "Urban Cadastral Map", href: "/cadastral-map", icon: Map },
     { label: "Submit Acquisition Proposal", href: "/submit-proposal", icon: Plus },
     { label: "Statutory Workbench", href: "/workbench", icon: FolderKanban },
   ],
   CALA: [
     { label: "CALA Adjudication Workbench", href: "/workbench", icon: FolderKanban },
+    { label: "Urban Cadastral Map", href: "/cadastral-map", icon: Map },
     { label: "National GIS Map", href: "/dashboard", icon: LayoutDashboard },
     { label: "Field Survey Queue", href: "/field-survey", icon: Map },
   ],
   FIELD_SURVEYOR: [
     { label: "GNSS Cadastral Queue", href: "/field-survey", icon: Camera },
+    { label: "Urban Cadastral Map", href: "/cadastral-map", icon: Map },
     { label: "Demarcation Inspections", href: "/field-survey", icon: Map },
     { label: "Sync & PostGIS Centre", href: "/field-survey", icon: Globe2 },
   ],
@@ -165,18 +186,20 @@ function Shell({ children }: { children: React.ReactNode }) {
         className={`fixed inset-y-0 left-0 z-30 hidden border-r border-slate-800 bg-[#0A0F1D] text-slate-100 transition-all duration-200 lg:block ${collapsed ? "w-[76px]" : "w-[260px]"} pt-[31px]`}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center gap-3 border-b border-slate-800/80 px-5">
-          <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-slate-950 font-bold shadow-sm">
-            <ShieldCheck className="size-5 text-slate-950 stroke-[2.5]" />
-          </div>
+        <div className="flex h-16 items-center gap-3 border-b border-slate-800/80 px-4">
+          <VajraBhoomiLogo size={36} />
           {!collapsed && (
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="font-bold tracking-tight text-white text-base">NLAMS</p>
-                <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-amber-300 border border-amber-500/30">2.0</span>
+                <p className="font-bold tracking-tight text-white text-base">
+                  Vajra<span className="text-amber-400 font-semibold">Bhoomi</span>
+                </p>
+                <span className="rounded bg-amber-500/20 px-1 py-0.2 text-[9px] font-mono font-bold text-amber-300 border border-amber-500/30">
+                  DPI
+                </span>
               </div>
-              <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
-                Vajracore DPI Engine
+              <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase truncate">
+                Land Governance Portal
               </p>
             </div>
           )}
@@ -244,9 +267,9 @@ function Shell({ children }: { children: React.ReactNode }) {
               <Menu className="size-4" />
             </Button>
             <div className="hidden sm:flex sm:items-center sm:gap-2 text-xs">
-              <span className="font-bold text-slate-800">NLAMS Portal</span>
+              <span className="font-bold text-slate-800">VajraBhoomi Portal</span>
               <span className="text-slate-300 font-light">/</span>
-              <span className="text-slate-600 font-medium">National Land Acquisition &amp; Management System</span>
+              <span className="text-slate-600 font-medium">National Land Governance &amp; Acquisition System</span>
               <Badge variant="outline" className="ml-2 border-emerald-200 bg-emerald-50 text-emerald-800 text-[10px] font-mono font-medium">
                 RFCTLARR 2013 Verified
               </Badge>
@@ -894,7 +917,6 @@ function getSurroundingLandAtPoint(site: GisProjectSite, u: number, v: number): 
 
 function MapCard() {
   const [selectedSiteId, setSelectedSiteId] = useState("nmia")
-  const [hovered, setHovered] = useState<string | null>(null)
   const [selectedParcel, setSelectedParcel] = useState<GisParcelOverlay | null>(null)
   const [isCinemaMode, setIsCinemaMode] = useState(false)
   const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({
@@ -904,102 +926,31 @@ function MapCard() {
     "Restricted Zone": true,
   })
 
-  // Pan and Zoom engine
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [hasDragged, setHasDragged] = useState(false)
-
   // Ground truth cadastral inspection pin
   const [inspectionPin, setInspectionPin] = useState<{
-    svgX: number
-    svgY: number
+    lat: number
+    lon: number
     data: GisSurroundingLandRecord
   } | null>(null)
 
-  const viewportRef = useRef<HTMLDivElement>(null)
-
   const currentProject = GIS_PROJECT_SITES.find((s) => s.id === selectedSiteId) || GIS_PROJECT_SITES[0]
-  const activeParcel = currentProject.parcels.find((p) => p.id === hovered) || null
 
   function toggleLayer(status: string) {
     setVisibleLayers((prev) => ({ ...prev, [status]: !prev[status] }))
   }
 
-  function handleZoomIn() {
-    setZoom((z) => Math.min(3.5, Math.round((z + 0.3) * 10) / 10))
-  }
-
-  function handleZoomOut() {
-    setZoom((z) => {
-      const next = Math.max(1, Math.round((z - 0.3) * 10) / 10)
-      if (next === 1) setPan({ x: 0, y: 0 })
-      return next
-    })
-  }
-
-  function handleResetView() {
-    setZoom(1)
-    setPan({ x: 0, y: 0 })
-    setInspectionPin(null)
-  }
-
-  function handleMouseDown(e: React.MouseEvent) {
-    setIsDragging(true)
-    setHasDragged(false)
-    setDragStart({ x: e.clientX, y: e.clientY })
-  }
-
-  function handleMouseMove(e: React.MouseEvent) {
-    if (!isDragging) return
-    const dx = e.clientX - dragStart.x
-    const dy = e.clientY - dragStart.y
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-      setHasDragged(true)
-    }
-
-    const maxPanX = Math.max(0, (zoom - 1) * 380)
-    const maxPanY = Math.max(0, (zoom - 1) * 220)
-
-    setPan((prev) => ({
-      x: Math.max(-maxPanX, Math.min(maxPanX, prev.x + dx)),
-      y: Math.max(-maxPanY, Math.min(maxPanY, prev.y + dy)),
-    }))
-    setDragStart({ x: e.clientX, y: e.clientY })
-  }
-
-  function handleMouseUp() {
-    setIsDragging(false)
-  }
-
-  function handleWheel(e: React.WheelEvent) {
-    e.preventDefault()
-    if (e.deltaY < 0) {
-      handleZoomIn()
-    } else {
-      handleZoomOut()
-    }
-  }
-
-  function handleCanvasClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (hasDragged) return
-    if (!viewportRef.current) return
-
-    const rect = viewportRef.current.getBoundingClientRect()
-    // Calculate click coordinates relative to current zoom and pan
-    const clientXRel = e.clientX - rect.left - pan.x
-    const clientYRel = e.clientY - rect.top - pan.y
-
-    const u = Math.max(0, Math.min(1, clientXRel / (rect.width * zoom)))
-    const v = Math.max(0, Math.min(1, clientYRel / (rect.height * zoom)))
-
-    const svgX = u * 960
-    const svgY = v * 540
-
-    const landData = getSurroundingLandAtPoint(currentProject, u, v)
-    setInspectionPin({ svgX, svgY, data: landData })
-  }
+  const handleMapClickCoord = useCallback(
+    (lat: number, lon: number) => {
+      const site = currentProject
+      const u = Math.max(0, Math.min(1, (lon - site.bounds.west) / (site.bounds.east - site.bounds.west)))
+      const v = Math.max(0, Math.min(1, (site.bounds.north - lat) / (site.bounds.north - site.bounds.south)))
+      const landData = getSurroundingLandAtPoint(site, u, v)
+      landData.lat = lat
+      landData.lon = lon
+      setInspectionPin({ lat, lon, data: landData })
+    },
+    [currentProject]
+  )
 
   return (
     <Card className={`overflow-hidden border-slate-200 bg-white shadow-xs transition-all duration-300 rounded-xl ${isCinemaMode ? 'xl:col-span-2' : ''}`}>
@@ -1009,11 +960,11 @@ function MapCard() {
             <div className="flex items-center gap-2">
               <CardTitle className="text-base text-slate-900 font-bold tracking-tight">National Infrastructure GIS Geofence</CardTitle>
               <Badge variant="outline" className="gap-1.5 border-emerald-300 bg-emerald-50 text-emerald-800 text-[11px] font-mono font-medium">
-                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live Cartosat-3 / Sentinel-2
+                <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live OpenStreetMap & Satellite
               </Badge>
             </div>
             <CardDescription className="text-xs text-slate-500">
-              Real-time satellite orthomosaics with sub-meter PostGIS spatial demarcation overlays
+              Interactive OpenStreetMap GIS with sub-meter cadastral PostGIS boundaries and ongoing project corridor demarcation
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
@@ -1042,10 +993,8 @@ function MapCard() {
                 type="button"
                 onClick={() => {
                   setSelectedSiteId(site.id)
-                  setHovered(null)
+                  setSelectedParcel(null)
                   setInspectionPin(null)
-                  setZoom(1)
-                  setPan({ x: 0, y: 0 })
                 }}
                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium transition-all ${
                   isSelected
@@ -1081,246 +1030,21 @@ function MapCard() {
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Main Satellite Viewport with Interactive Pan and Zoom */}
+        {/* Main National Infrastructure OpenStreetMap Viewport */}
         <div
-          ref={viewportRef}
-          className={`relative overflow-hidden rounded-xl border border-slate-300 shadow-inner select-none transition-colors ${
-            isDragging ? "cursor-grabbing" : "cursor-grab"
-          } ${isCinemaMode ? "min-h-[480px] h-[520px]" : "min-h-[350px] h-[380px]"}`}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onWheel={handleWheel}
-          onClick={handleCanvasClick}
+          className={`relative overflow-hidden rounded-xl border border-slate-300 shadow-inner transition-all duration-300 ${
+            isCinemaMode ? "min-h-[520px] h-[580px]" : "min-h-[380px] h-[430px]"
+          }`}
         >
-          {/* Pan & Zoom Transform Wrapper */}
-          <div
-            className="absolute inset-0 size-full origin-center transition-transform duration-75 ease-out"
-            style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              backgroundImage: `url('${currentProject.imageUrl}')`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
-          >
-            {/* SVG Vector Overlays */}
-            <svg className="absolute inset-0 size-full" viewBox="0 0 960 540" preserveAspectRatio="none">
-              <defs>
-                <pattern id="diagonalHatchGis" patternUnits="userSpaceOnUse" width="8" height="8">
-                  <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="#dc2626" strokeWidth="1.5" />
-                </pattern>
-              </defs>
-
-              {currentProject.parcels.map((parcel) => {
-                if (!visibleLayers[parcel.status]) return null
-
-                const isHovered = hovered === parcel.id
-                const isSelected = selectedParcel?.id === parcel.id
-
-                let fill = "rgba(16, 185, 129, 0.45)"
-                let stroke = "#10b981"
-
-                if (parcel.status === "In Progress") {
-                  fill = isHovered ? "rgba(245, 158, 11, 0.75)" : "rgba(245, 158, 11, 0.45)"
-                  stroke = "#f59e0b"
-                } else if (parcel.status === "Disputed") {
-                  fill = isHovered ? "rgba(239, 68, 68, 0.75)" : "rgba(239, 68, 68, 0.48)"
-                  stroke = "#ef4444"
-                } else if (parcel.status === "Restricted Zone") {
-                  fill = "url(#diagonalHatchGis)"
-                  stroke = "#dc2626"
-                } else {
-                  fill = isHovered ? "rgba(16, 185, 129, 0.75)" : "rgba(16, 185, 129, 0.45)"
-                  stroke = "#10b981"
-                }
-
-                return (
-                  <polygon
-                    key={parcel.id}
-                    points={parcel.points}
-                    fill={fill}
-                    stroke={stroke}
-                    strokeWidth={isHovered || isSelected ? "3.5" : "2"}
-                    opacity={parcel.status === "Restricted Zone" ? (isHovered ? 0.8 : 0.5) : 1}
-                    className="cursor-pointer transition-all duration-200 filter hover:drop-shadow"
-                    onMouseEnter={() => setHovered(parcel.id)}
-                    onMouseLeave={() => setHovered(null)}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setSelectedParcel(parcel)
-                    }}
-                  />
-                )
-              })}
-
-              {/* Dynamic Dropped Cadastral Inspection Pin */}
-              {inspectionPin && (
-                <g className="transition-all duration-200">
-                  {/* Outer Pulsing Radar Ring */}
-                  <circle
-                    cx={inspectionPin.svgX}
-                    cy={inspectionPin.svgY}
-                    r="16"
-                    fill="rgba(14, 165, 233, 0.2)"
-                    stroke="#0284c7"
-                    strokeWidth="1.5"
-                    className="animate-ping origin-center opacity-75"
-                  />
-                  {/* Intermediate Target Reticle */}
-                  <circle
-                    cx={inspectionPin.svgX}
-                    cy={inspectionPin.svgY}
-                    r="9"
-                    fill="rgba(255, 255, 255, 0.9)"
-                    stroke="#0284c7"
-                    strokeWidth="2"
-                  />
-                  {/* Crosshair lines */}
-                  <line
-                    x1={inspectionPin.svgX - 14}
-                    y1={inspectionPin.svgY}
-                    x2={inspectionPin.svgX + 14}
-                    y2={inspectionPin.svgY}
-                    stroke="#0284c7"
-                    strokeWidth="1.5"
-                  />
-                  <line
-                    x1={inspectionPin.svgX}
-                    y1={inspectionPin.svgY - 14}
-                    x2={inspectionPin.svgX}
-                    y2={inspectionPin.svgY + 14}
-                    stroke="#0284c7"
-                    strokeWidth="1.5"
-                  />
-                  {/* Center Dot */}
-                  <circle
-                    cx={inspectionPin.svgX}
-                    cy={inspectionPin.svgY}
-                    r="3.5"
-                    fill="#0369a1"
-                  />
-                </g>
-              )}
-            </svg>
-          </div>
-
-          {/* Interactive Zoom and Pan HUD Toolbar */}
-          <div className="absolute right-3 top-3 z-20 flex flex-col items-end gap-2">
-            <div className="flex items-center gap-1 rounded-lg border border-slate-200/80 bg-white/95 p-1 shadow-md backdrop-blur">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-7 text-slate-700 hover:bg-slate-100"
-                onClick={handleZoomIn}
-                title="Zoom In (or scroll up)"
-              >
-                <ZoomIn className="size-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-7 text-slate-700 hover:bg-slate-100"
-                onClick={handleZoomOut}
-                disabled={zoom <= 1}
-                title="Zoom Out (or scroll down)"
-              >
-                <ZoomOut className="size-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-7 text-slate-700 hover:bg-slate-100"
-                onClick={handleResetView}
-                title="Reset Zoom & Pan"
-              >
-                <RotateCcw className="size-3.5" />
-              </Button>
-              <Separator orientation="vertical" className="h-4 mx-0.5" />
-              <div className="px-2 font-mono text-[10px] font-bold text-slate-900">
-                {zoom.toFixed(1)}x
-              </div>
-            </div>
-
-            {/* PostGIS Geofence Verification Pill */}
-            <div className="flex items-center gap-2 rounded-md bg-slate-900/85 px-2.5 py-1 text-[11px] font-mono text-emerald-400 shadow-sm backdrop-blur">
-              <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>PostGIS ST_Intersects Verified</span>
-            </div>
-          </div>
-
-          {/* Dynamic Parcel Hover Tooltip */}
-          {activeParcel && (
-            <div className="absolute top-3 left-3 z-20 max-w-[320px] rounded-lg border border-teal-500/80 bg-white/95 p-3 text-xs shadow-lg backdrop-blur animate-in fade-in-50 duration-150">
-              <div className="flex items-center justify-between gap-2 mb-1.5">
-                <span className="font-semibold text-slate-900 truncate">{activeParcel.name}</span>
-                <Status>{activeParcel.status}</Status>
-              </div>
-              <p className="text-[11px] text-slate-600 leading-snug">{activeParcel.details}</p>
-              <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-1.5 font-mono text-[10px] text-slate-500">
-                <span>Area: <strong className="text-slate-700">{activeParcel.area}</strong></span>
-                <span>Survey: <strong className="text-slate-700">{activeParcel.surveyNumber}</strong></span>
-              </div>
-              <p className="mt-1 text-[10px] text-teal-700 font-medium">Click polygon to open full dossier →</p>
-            </div>
-          )}
-
-          {!activeParcel && !inspectionPin && (
-            <p className="absolute top-3 left-3 z-10 rounded-md bg-white/90 px-2.5 py-1 text-[11px] text-slate-700 shadow-sm backdrop-blur">
-              Click anywhere on map to inspect surrounding cadastral land · Drag to pan · Scroll to zoom
-            </p>
-          )}
-
-          {/* Layer Status Filter Bar */}
-          <div className="absolute bottom-3 left-3 z-10 rounded-lg border border-white/70 bg-white/95 p-2.5 text-xs shadow-md backdrop-blur">
-            <p className="mb-1.5 text-[11px] font-semibold text-slate-700">GIS Layers (Toggle Visibility)</p>
-            <div className="flex flex-wrap items-center gap-2.5 text-[11px]">
-              <button
-                type="button"
-                onClick={() => toggleLayer("Acquired")}
-                className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-opacity ${
-                  visibleLayers["Acquired"] ? "opacity-100 font-medium text-slate-800" : "opacity-40 text-slate-400"
-                }`}
-              >
-                <span className="size-2.5 rounded-full bg-emerald-500" /> Acquired
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleLayer("In Progress")}
-                className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-opacity ${
-                  visibleLayers["In Progress"] ? "opacity-100 font-medium text-slate-800" : "opacity-40 text-slate-400"
-                }`}
-              >
-                <span className="size-2.5 rounded-full bg-amber-500" /> In Progress
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleLayer("Disputed")}
-                className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-opacity ${
-                  visibleLayers["Disputed"] ? "opacity-100 font-medium text-slate-800" : "opacity-40 text-slate-400"
-                }`}
-              >
-                <span className="size-2.5 rounded-full bg-rose-500" /> Disputed
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleLayer("Restricted Zone")}
-                className={`flex items-center gap-1.5 rounded px-1.5 py-0.5 transition-opacity ${
-                  visibleLayers["Restricted Zone"] ? "opacity-100 font-medium text-slate-800" : "opacity-40 text-slate-400"
-                }`}
-              >
-                <span className="size-2.5 rounded bg-red-700 border border-red-800" /> Eco-Buffer
-              </button>
-            </div>
-          </div>
-
-          {/* Scale / Coordinate Watermark */}
-          <div className="absolute right-3 bottom-3 z-10 rounded bg-black/60 px-2 py-0.5 text-[10px] font-mono text-white/80 backdrop-blur">
-            CRS: EPSG:4326 (WGS 84) · Scale 1:{Math.round(12500 / zoom)}
-          </div>
+          <NationalGisLeafletMap
+            project={currentProject}
+            visibleLayers={visibleLayers}
+            onToggleLayer={toggleLayer}
+            selectedParcelId={selectedParcel?.id || null}
+            onSelectParcel={(parcel) => setSelectedParcel(parcel)}
+            onMapClickCoord={handleMapClickCoord}
+            inspectionPin={inspectionPin ? { lat: inspectionPin.lat, lon: inspectionPin.lon } : null}
+          />
         </div>
 
         {/* Real-time Cadastral Land & Surrounding Inspector Strip */}
@@ -1486,7 +1210,7 @@ function downloadCsvReport(
   ].join(" | ")
 
   const rows = [
-    ["National Land Acquisition & Management System (NLAMS 2.0) - Executive MIS Report"],
+    ["National Land Governance & Acquisition System (VajraBhoomi) - Executive MIS Report"],
     [`Generated On: ${new Date().toLocaleString("en-IN")}`],
     [`Filter Scope: ${scopeDesc}`],
     [],
@@ -1540,7 +1264,7 @@ function downloadCsvReport(
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.setAttribute("href", url)
-  link.setAttribute("download", `NLAMS_Executive_MIS_Report_${new Date().toISOString().slice(0, 10)}.csv`)
+  link.setAttribute("download", `VajraBhoomi_Executive_MIS_Report_${new Date().toISOString().slice(0, 10)}.csv`)
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
@@ -1924,7 +1648,69 @@ function Scrutiny({
   const [resolutionNotes, setResolutionNotes] = useState<string>("")
   const [disbursing, setDisbursing] = useState<boolean>(false)
 
+  // ─── Statutory DSS & Human-in-the-Loop (HITL) State ───────────
+  const [showAwardModal, setShowAwardModal] = useState(false)
+  const [isDscSigned, setIsDscSigned] = useState(false)
+  const [signingDsc, setSigningDsc] = useState(false)
+  const [dscTokenId, setDscTokenId] = useState<string | null>(null)
+  const [isManualOverride, setIsManualOverride] = useState(false)
+  const [overrideValue, setOverrideValue] = useState<number>(0)
+  const [overrideReason, setOverrideReason] = useState("")
+
   const nextStages = TRANSITIONS[proposal.stage] || []
+
+  // Derived statutory formula values (RFCTLARR Act 2013)
+  const areaHa = proposal.area_hectares || 10.5
+  const baseLandValue = Math.round(areaHa * 4200000)
+  const multiplier = 1.0 // Urban 1.0x, Rural 1.5x - 2.0x
+  const marketValue = Math.round(baseLandValue * multiplier)
+  const solatiumValue = marketValue // Section 30(1): Mandatory 100% Solatium
+  const addlInterest = Math.round(marketValue * 0.12 * 1.5) // Section 30(3): 12% p.a.
+  const assetsValue = Math.round(marketValue * 0.20) // Section 29: Immovable assets & trees
+  const rrPackageValue = Math.round(marketValue * 0.15) // Second Schedule: R&R entitlements
+  const defaultTotalAward = marketValue + solatiumValue + addlInterest + assetsValue + rrPackageValue
+  const currentAwardTotal = isManualOverride && overrideValue > 0 ? overrideValue : defaultTotalAward
+
+  // Confidence Triage Matrix (Green / Amber / Red)
+  const triage = useMemo(() => {
+    let score = 94
+    let route: "GREEN" | "AMBER" | "RED" = "GREEN"
+    let statusLabel = "High Statutory Certainty"
+    let badgeColor = "bg-emerald-50 text-emerald-800 border-emerald-300"
+    let dotColor = "bg-emerald-500"
+    let actionHint = "Clean title, zero statutory buffer overlaps · Fast-Track CALA DSC e-Sign ready"
+
+    if (objections.some((o) => o.status === "OPEN")) {
+      score -= 35
+      actionHint = "Active citizen objection under Section 15 · Mandatory hearing before sign-off"
+    }
+    if (proposal.litigation_risk_score && proposal.litigation_risk_score > 50) {
+      score -= 25
+      actionHint = "Elevated litigation index detected · Legal Registry cross-check advised"
+    }
+    if (report?.legal_result?.status === "FLAGGED") {
+      score -= 20
+      actionHint = "Title discrepancies flagged in registry deed parsing"
+    }
+    if (report?.geospatial_result?.status === "FLAGGED") {
+      score -= 20
+      actionHint = "Ecological buffer or restricted zone overlap detected"
+    }
+
+    if (score < 60) {
+      route = "RED"
+      statusLabel = "Complex / Contested Case (Red Flag)"
+      badgeColor = "bg-red-50 text-red-800 border-red-300"
+      dotColor = "bg-red-500"
+    } else if (score < 85) {
+      route = "AMBER"
+      statusLabel = "Moderate Certainty (Amber Flag)"
+      badgeColor = "bg-amber-50 text-amber-900 border-amber-300"
+      dotColor = "bg-amber-500"
+    }
+
+    return { score: Math.max(score, 35), route, statusLabel, badgeColor, dotColor, actionHint }
+  }, [objections, proposal.litigation_risk_score, report])
 
   const fetchReport = useCallback(async () => {
     setLoadingReport(true)
@@ -1940,7 +1726,13 @@ function Scrutiny({
       if (parcelsRes.status === "fulfilled") setParcels(parcelsRes.value)
       if (docsRes.status === "fulfilled") setDocuments(docsRes.value)
       if (objRes.status === "fulfilled") setObjections(objRes.value)
-      if (compRes.status === "fulfilled") setCompensation(compRes.value)
+      if (compRes.status === "fulfilled") {
+        setCompensation(compRes.value)
+        if (compRes.value.length > 0 && compRes.value[0].status === "PAID") {
+          setIsDscSigned(true)
+          setDscTokenId("NIC-GOV-MH-CALA-2026-9921-VERIFIED")
+        }
+      }
     } catch (err: any) {
       if (err.status !== 404) {
         setError("Failed to fetch report")
@@ -2008,6 +1800,17 @@ function Scrutiny({
     }
   }
 
+  // Handle mock Class-3 Government DSC e-Sign
+  function handleSignDsc() {
+    setSigningDsc(true)
+    setTimeout(() => {
+      setIsDscSigned(true)
+      const token = `DSC-NIC-MH-CALA-${Math.floor(100000 + Math.random() * 900000)}-SHA256`
+      setDscTokenId(token)
+      setSigningDsc(false)
+    }, 1200)
+  }
+
   return (
     <div className="grid gap-3 border-t border-slate-200 bg-slate-50/70 p-4 lg:grid-cols-3">
       {/* Proposal Summary: Registered Parcel & Statutory Document */}
@@ -2020,6 +1823,13 @@ function Scrutiny({
               ? `${parcels[0].owner_name || "Declared Owner"} (${parcels[0].claimed_area_sqm ? parcels[0].claimed_area_sqm.toLocaleString() + " sqm" : "Boundary recorded"}) · PostGIS Geofenced`
               : "No parcel attached"}
           </span>
+          <Link
+            href={`/cadastral-map?ulpin=${parcels[0]?.ulpin || "MH1234567890"}`}
+            className="ml-2 inline-flex items-center gap-1 rounded bg-slate-100 hover:bg-slate-200 px-2 py-0.5 text-[10.5px] font-semibold text-slate-700 transition"
+          >
+            <Map className="size-3 text-amber-600" />
+            View UCL Map
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           <FileText className="size-4 text-teal-700" />
@@ -2052,6 +1862,58 @@ function Scrutiny({
         </div>
       ) : (
         <>
+          {/* 🏛️ Statutory Decision Support System (DSS) & Confidence Triage Header */}
+          <div className="col-span-3 rounded-xl border border-slate-200 bg-white p-4 shadow-2xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-start gap-2.5">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white shadow-xs">
+                  <Scale className="size-4 text-amber-400" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+                      Statutory Decision Support System (DSS) · RFCTLARR Act (2013)
+                    </span>
+                    <Badge variant="outline" className="border-amber-300 bg-amber-50 text-[10px] font-mono text-amber-900">
+                      Human-in-the-Loop (HITL)
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    AI operates as Statutory Preparer under Section 23/31. Legal Award determination &amp; disbursement strictly requires Competent Authority (CALA) Digital Signature Certificate (DSC) seal.
+                  </p>
+                </div>
+              </div>
+
+              {/* Confidence Route Pill */}
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${triage.badgeColor}`}>
+                  <span className={`size-2 rounded-full ${triage.dotColor} animate-pulse`} />
+                  {triage.statusLabel} ({triage.score}% Confidence)
+                </span>
+              </div>
+            </div>
+
+            {/* Confidence Progress & Assessment Notes */}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold text-slate-600">DSS Confidence Level:</span>
+                <div className="h-2 w-28 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      triage.route === "GREEN" ? "bg-emerald-500" : triage.route === "AMBER" ? "bg-amber-500" : "bg-red-500"
+                    }`}
+                    style={{ width: `${triage.score}%` }}
+                  />
+                </div>
+                <span className="font-mono font-bold text-slate-800 text-xs">{triage.score}%</span>
+              </div>
+              <span className="text-[11px] text-slate-500 italic">
+                {triage.actionHint}
+              </span>
+            </div>
+          </div>
+
+          {/* Legal Scrutinizer Card */}
           <Card className="shadow-none">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-sm">
@@ -2061,7 +1923,7 @@ function Scrutiny({
             </CardHeader>
             <CardContent className="text-xs text-slate-600">
               <p className={`mb-2 font-medium ${report.legal_result.status === 'PASS' ? 'text-emerald-700' : 'text-red-700'}`}>
-                {report.legal_result.status === 'PASS' ? 'Passed — Verification complete' : 'Flagged — Discrepancies found'}
+                {report.legal_result.status === 'PASS' ? 'Passed — Title deed verified' : 'Flagged — Discrepancies found'}
               </p>
               {report.legal_result.flags && report.legal_result.flags.length > 0 ? (
                 <ul className="flex flex-col gap-1 mt-2">
@@ -2072,6 +1934,8 @@ function Scrutiny({
               )}
             </CardContent>
           </Card>
+
+          {/* Geospatial Analyzer Card */}
           <Card className="shadow-none">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-sm">
@@ -2092,19 +1956,35 @@ function Scrutiny({
               )}
             </CardContent>
           </Card>
-          <Card className="shadow-none">
+
+          {/* R&R Statutory Award Preparer Card */}
+          <Card className="shadow-none border-amber-200/80 bg-amber-50/20">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2"><Users className="size-4 text-teal-700" /> R&amp;R Calculator</span>
-                <Status>{report.rr_result.status}</Status>
+                <span className="flex items-center gap-2"><Users className="size-4 text-amber-700" /> R&amp;R Award Preparer</span>
+                <Badge variant="outline" className="border-amber-300 bg-amber-100/70 text-amber-900 text-[10px] font-mono">
+                  Sec 26-30 Draft
+                </Badge>
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-slate-600">
-              <p className={`mb-2 font-medium ${report.rr_result.status === 'PASS' ? 'text-emerald-700' : 'text-amber-700'}`}>
-                {report.rr_result.policy_notes || report.rr_result.summary}
+              <p className="mb-2 font-medium text-slate-800">
+                Draft Statutory Award (100% Solatium + 12% Interest)
               </p>
               <div className="flex flex-col gap-2 mt-2">
-                <div className="flex justify-between"><span>Est. Total Compensation</span><b className="text-emerald-700 font-mono">₹{(report.rr_result.total_proposal_compensation || 0).toLocaleString('en-IN')}</b></div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Draft Compensation Total:</span>
+                  <b className="text-emerald-700 font-mono text-sm">{fmtINR(currentAwardTotal)}</b>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAwardModal(true)}
+                  className="mt-2 w-full text-xs h-8 border-slate-300 bg-white hover:bg-slate-50 font-semibold text-slate-800 flex items-center justify-center gap-1.5 shadow-2xs"
+                >
+                  <FileText className="size-3.5 text-amber-600" />
+                  Inspect Draft Award &amp; DSC Sign-off
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -2118,7 +1998,7 @@ function Scrutiny({
             <CardTitle className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2">
                 <Flag className="size-4 text-amber-600" />
-                Citizen Objections &amp; Grievance Redressal
+                Citizen Objections &amp; Grievance Redressal (Section 15)
               </span>
               <Badge variant="outline" className="text-xs">
                 {objections.filter((o) => o.status === "OPEN").length} pending · {objections.length} total
@@ -2170,38 +2050,68 @@ function Scrutiny({
         </Card>
       )}
 
-      {/* Compensation Award & Disbursement Bar */}
-      {compensation.length > 0 && (
-        <div className="col-span-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3.5 text-xs text-slate-700">
-          <div className="flex items-center gap-2.5">
-            <Building2 className="size-5 text-emerald-700 shrink-0" />
-            <div>
-              <p className="font-semibold text-slate-800">
-                Land Compensation Award: {fmtINR(Number(compensation[0].assessed_amount))}
-              </p>
-              <p className="text-[11px] text-slate-500">
-                Award Status: <strong>{compensation[0].status}</strong> {compensation[0].paid_amount ? `· Disbursed ${fmtINR(Number(compensation[0].paid_amount))}` : ""}
-              </p>
-            </div>
+      {/* Compensation Award & DSC Countersignature Status */}
+      <div className="col-span-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3.5 text-xs text-slate-700 shadow-2xs">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <Building2 className="size-5" />
           </div>
-          {user?.role === "CALA" && compensation[0].status !== "PAID" && (
+          <div>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-slate-900">
+                Statutory Compensation Award: {fmtINR(currentAwardTotal)}
+              </p>
+              {isDscSigned ? (
+                <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-mono font-bold text-emerald-800 border border-emerald-300">
+                  <CheckCircle2 className="size-3" />
+                  CALA DSC COUNTERSIGNED
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-800 border border-amber-300">
+                  <Lock className="size-3" />
+                  AWAITING CALA DSC LOCK
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              {isDscSigned
+                ? `Digitally locked by Rohan Deshmukh, IAS (CALA) · Token: ${dscTokenId || "GOV-MH-CALA-2026-9921"}`
+                : "Draft Award prepared by AI · Open Breakdown modal to review, adjust, or countersign via USB DSC"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {user?.role === "CALA" && !isDscSigned && (
+            <Button
+              size="sm"
+              onClick={() => setShowAwardModal(true)}
+              className="bg-amber-600 hover:bg-amber-700 text-white text-xs h-8 shadow-xs font-semibold"
+            >
+              <PenTool className="mr-1.5 size-3.5" />
+              Review &amp; Sign Award
+            </Button>
+          )}
+
+          {user?.role === "CALA" && isDscSigned && compensation.length > 0 && compensation[0].status !== "PAID" && (
             <Button
               size="sm"
               disabled={disbursing}
               onClick={() => handleDisburseCompensation(compensation[0].id)}
-              className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-8"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs h-8 shadow-xs font-semibold"
             >
               {disbursing ? <Spinner className="mr-1.5 size-3 text-white" /> : <Check className="mr-1.5 size-3" />}
-              Approve &amp; Disburse Compensation
+              Disburse via DBT
             </Button>
           )}
-          {compensation[0].status === "PAID" && (
-            <Badge className="bg-emerald-600 text-white text-xs">
-              Payment Settled via Direct Beneficiary Transfer
+
+          {compensation.length > 0 && compensation[0].status === "PAID" && (
+            <Badge className="bg-emerald-600 text-white text-xs font-mono py-1 px-2.5">
+              Settled via Direct Beneficiary Transfer (DBT)
             </Badge>
           )}
         </div>
-      )}
+      </div>
 
       {error && (
         <div className="lg:col-span-3 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -2209,6 +2119,7 @@ function Scrutiny({
         </div>
       )}
 
+      {/* Stage Transition Bar */}
       <div className="lg:col-span-3 flex flex-wrap gap-3 items-center justify-between pt-3 border-t border-slate-100">
         <div className="flex flex-wrap gap-2">
           {user?.role === "CALA" && nextStages.map((stage) => (
@@ -2242,6 +2153,204 @@ function Scrutiny({
           )}
         </div>
       </div>
+
+      {/* ─── Statutory Award Determination (Section 23/31 RFCTLARR 2013) Modal ─── */}
+      {showAwardModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="relative w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-in fade-in-50 zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs">
+                  <Scale className="size-5 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Preliminary Award Determination Sheet (Section 23/31)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    RFCTLARR Act (2013) · Decision Support System (DSS) Human-in-the-Loop Module
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAwardModal(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {/* Official Legal Notice */}
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/40 p-3.5 text-xs text-amber-900 flex items-start gap-2.5">
+              <ShieldAlert className="size-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <strong className="block font-semibold">Statutory Authority Notice:</strong>
+                <p className="text-[11px] leading-relaxed text-amber-800">
+                  This computation has been drafted autonomously by the R&amp;R Decision Support Agent based on Ready Reckoner circle rates and registered cadastral boundaries. It possesses <strong>no legal force</strong> until formally countersigned with the District Collector&apos;s Class-3 Digital Signature Certificate (DSC).
+                </p>
+              </div>
+            </div>
+
+            {/* Statutory Formula Breakdown Table */}
+            <div className="mt-4 border border-slate-200 rounded-xl overflow-hidden text-xs">
+              <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200 font-semibold text-slate-800 flex justify-between items-center">
+                <span>Statutory Computation Line Item</span>
+                <span>Assessed Amount</span>
+              </div>
+              <div className="divide-y divide-slate-100 p-2 space-y-1">
+                <div className="flex justify-between items-center px-2 py-1.5">
+                  <div>
+                    <span className="font-semibold text-slate-800">1. Base Market Value (Section 26)</span>
+                    <p className="text-[10.5px] text-slate-400">Ready Reckoner benchmark × Area ({areaHa} ha) × Urban Multiplier (1.0x)</p>
+                  </div>
+                  <span className="font-mono font-medium text-slate-800">{fmtINR(marketValue)}</span>
+                </div>
+                <div className="flex justify-between items-center px-2 py-1.5 bg-emerald-50/40 rounded">
+                  <div>
+                    <span className="font-semibold text-emerald-900">2. Mandatory Solatium (Section 30(1))</span>
+                    <p className="text-[10.5px] text-emerald-700">Mandatory 100% additional award on Market Value</p>
+                  </div>
+                  <span className="font-mono font-semibold text-emerald-800">{fmtINR(solatiumValue)}</span>
+                </div>
+                <div className="flex justify-between items-center px-2 py-1.5">
+                  <div>
+                    <span className="font-semibold text-slate-800">3. Additional Market Value Interest (Section 30(3))</span>
+                    <p className="text-[10.5px] text-slate-400">12% per annum from Section 11 Preliminary Notification date</p>
+                  </div>
+                  <span className="font-mono font-medium text-slate-800">{fmtINR(addlInterest)}</span>
+                </div>
+                <div className="flex justify-between items-center px-2 py-1.5">
+                  <div>
+                    <span className="font-semibold text-slate-800">4. Immovable Assets &amp; Structures (Section 29)</span>
+                    <p className="text-[10.5px] text-slate-400">PWD / Horticulture assessment for structures and borewells</p>
+                  </div>
+                  <span className="font-mono font-medium text-slate-800">{fmtINR(assetsValue)}</span>
+                </div>
+                <div className="flex justify-between items-center px-2 py-1.5">
+                  <div>
+                    <span className="font-semibold text-slate-800">5. R&amp;R Package Entitlements (Second Schedule)</span>
+                    <p className="text-[10.5px] text-slate-400">Resettlement grant, one-time subsistence allowance</p>
+                  </div>
+                  <span className="font-mono font-medium text-slate-800">{fmtINR(rrPackageValue)}</span>
+                </div>
+              </div>
+              <div className="bg-slate-900 text-white p-3 flex justify-between items-center font-bold">
+                <span>Total Statutory Award (AI Suggested):</span>
+                <span className="font-mono text-base text-amber-400">{fmtINR(defaultTotalAward)}</span>
+              </div>
+            </div>
+
+            {/* Human-in-the-Loop Override Section */}
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="size-4 text-slate-700" />
+                  <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    CALA Judicial Discretion &amp; Override (HITL)
+                  </span>
+                </div>
+                <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isManualOverride}
+                    onChange={(e) => {
+                      setIsManualOverride(e.target.checked)
+                      if (!e.target.checked) setOverrideValue(0)
+                      else setOverrideValue(defaultTotalAward)
+                    }}
+                    className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                  />
+                  <span>Exercise Override</span>
+                </label>
+              </div>
+
+              {isManualOverride && (
+                <div className="space-y-2 pt-2 border-t border-slate-200">
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                      Adjudicated Award Amount (INR):
+                    </label>
+                    <Input
+                      type="number"
+                      value={overrideValue}
+                      onChange={(e) => setOverrideValue(Number(e.target.value))}
+                      className="text-xs font-mono h-8 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                      Mandatory Statutory Justification for Judicial Modification:
+                    </label>
+                    <Textarea
+                      placeholder="e.g. Compensation adjusted upwards pursuant to High Court ruling in precedent civil appeal 812/2024..."
+                      value={overrideReason}
+                      onChange={(e) => setOverrideReason(e.target.value)}
+                      className="text-xs h-16 bg-white"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* DSC Signing Panel */}
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/30 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-slate-900 block">
+                    Digital Signature Certificate (DSC) Stamping
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Signing Officer: <strong>Rohan Deshmukh, IAS (District Collector / CALA)</strong>
+                  </span>
+                </div>
+                {isDscSigned ? (
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-600 px-3 py-1 text-xs font-semibold text-white shadow-xs">
+                    <CheckCircle2 className="size-3.5" />
+                    DSC Locked &amp; Certified
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    disabled={signingDsc}
+                    onClick={handleSignDsc}
+                    className="bg-slate-900 hover:bg-slate-800 text-white text-xs h-8 shadow-xs font-semibold"
+                  >
+                    {signingDsc ? <Spinner className="mr-1.5 size-3.5 text-white" /> : <PenTool className="mr-1.5 size-3.5 text-amber-400" />}
+                    {signingDsc ? "Verifying Token & Applying Cryptographic Seal..." : "Sign with Class-3 DSC Token"}
+                  </Button>
+                )}
+              </div>
+
+              {isDscSigned && (
+                <div className="mt-3 pt-3 border-t border-emerald-200/80 text-[10.5px] font-mono text-emerald-950 flex flex-wrap justify-between gap-1">
+                  <span>Cryptographic Token: {dscTokenId}</span>
+                  <span>Timestamp: {new Date().toLocaleString("en-IN")}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+                className="text-xs h-8 gap-1.5"
+              >
+                <Printer className="size-3.5" />
+                Print Statutory Sheet
+              </Button>
+              <Button
+                onClick={() => setShowAwardModal(false)}
+                className="bg-slate-900 text-white text-xs h-8 px-4 font-semibold"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -3554,9 +3663,18 @@ function MyLand() {
                   Khatedar: <strong>{activeParcel?.owner_name || user?.name || "Ganesh Patil"}</strong> · {activeParcel?.claimed_area_sqm ? `${activeParcel.claimed_area_sqm.toLocaleString()} sqm` : "12,000 sqm"}
                 </CardDescription>
               </div>
-              <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
-                ULPIN Verified
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/cadastral-map?ulpin=MH1234567890"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-teal-300 bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-800 hover:bg-teal-100 transition shadow-2xs"
+                >
+                  <Map className="size-3" />
+                  View Cadastral Map (UCL)
+                </Link>
+                <Badge variant="outline" className="border-teal-200 bg-teal-50 text-teal-700">
+                  ULPIN Verified
+                </Badge>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -3758,6 +3876,22 @@ function MyLand() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// UCL CADASTRAL MAP VIEW
+// ═══════════════════════════════════════════════════════════════
+function CadastralMapView() {
+  return (
+    <div className="space-y-4">
+      <PageHeading
+        eyebrow="GIS & Cadastral Directorate"
+        title="Urban Cadastral Linkage (UCL) Module"
+        description="Spatial City Survey plot boundaries linked with textual Property Cards (अखीव पत्रिका) via 14-digit ULPIN (Bhu-Aadhaar) primary keys."
+      />
+      <UrbanCadastralMap />
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
 // ROOT COMPONENT — route → component mapping
 // ═══════════════════════════════════════════════════════════════
 export default function NlamsApp() {
@@ -3776,6 +3910,9 @@ export default function NlamsApp() {
       break
     case "/my-land":
       content = <MyLand />
+      break
+    case "/cadastral-map":
+      content = <CadastralMapView />
       break
     default:
       content = <Dashboard />

@@ -167,3 +167,14 @@
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
+
+/* Hide Next.js dev indicator badge, toasts, and portal overlays */
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dialog-overlay],
+div[data-nextjs-router-announcer],
+#nextjs-dev-indicator,
+[data-next-badge] {
+  display: none !important;
+}
+

@@ -11,10 +11,10 @@ const doc = new PDFDocument({
   bufferPages: true,
   autoFirstPage: false,
   info: {
-    Title: 'NLAMS 2.0 Vajracore - Project Documentation',
+    Title: 'VajraBhoomi - National Land Governance & Acquisition System Documentation',
     Author: 'Team Vajracore (Smart India Hackathon 2026)',
-    Subject: 'National Land Acquisition & Management System Dossier',
-    Keywords: 'NLAMS, SIH2026, Land Acquisition, RFCTLARR, PostGIS, Next.js, Multi-Agent AI'
+    Subject: 'VajraBhoomi NLAMS 2.0 Comprehensive Project Dossier',
+    Keywords: 'VajraBhoomi, NLAMS, SIH2026, Land Acquisition, RFCTLARR, PostGIS, Next.js, OpenStreetMap, ULPIN, Multi-Agent AI'
   }
 });
 
@@ -48,7 +48,7 @@ function drawHeader(title) {
   doc.save();
   doc.rect(45, 24, CONTENT_WIDTH, 2).fill(COLORS.blue);
   doc.fillColor(COLORS.slateMed).fontSize(8.5).font('Helvetica-Bold')
-     .text('NLAMS 2.0 VAJRACORE — SIH 2026 PROJECT DOSSIER', 45, 12, { width: CONTENT_WIDTH, align: 'left' });
+     .text('VAJRABHOOMI — SIH 2026 PROJECT DOSSIER', 45, 12, { width: CONTENT_WIDTH, align: 'left' });
   doc.font('Helvetica').text(title.toUpperCase(), 45, 12, { width: CONTENT_WIDTH, align: 'right' });
   doc.restore();
 }
@@ -64,24 +64,24 @@ function drawSectionHeading(num, title) {
 }
 
 function drawSubHeading(title) {
-  doc.fillColor(COLORS.slateDark).fontSize(11).font('Helvetica-Bold')
-     .text(title, 45, doc.y + 4, { width: CONTENT_WIDTH });
-  doc.y = doc.y + 4;
+  doc.fillColor(COLORS.slateDark).fontSize(10.5).font('Helvetica-Bold')
+     .text(title, 45, doc.y + 3, { width: CONTENT_WIDTH });
+  doc.y = doc.y + 3;
 }
 
 function drawParagraph(text) {
-  doc.fillColor(COLORS.slateDark).fontSize(9.8).font('Helvetica')
-     .text(text, 45, doc.y + 3, { width: CONTENT_WIDTH, lineGap: 3.5, align: 'justify' });
-  doc.y = doc.y + 4;
+  doc.fillColor(COLORS.slateDark).fontSize(9.2).font('Helvetica')
+     .text(text, 45, doc.y + 2, { width: CONTENT_WIDTH, lineGap: 3, align: 'justify' });
+  doc.y = doc.y + 3;
 }
 
 function drawBullet(title, desc) {
-  const y = doc.y + 4;
-  doc.circle(50, y + 5.5, 2.5).fill(COLORS.blue);
-  doc.fillColor(COLORS.slateDark).fontSize(9.8).font('Helvetica-Bold')
+  const y = doc.y + 3;
+  doc.circle(50, y + 5, 2.5).fill(COLORS.blue);
+  doc.fillColor(COLORS.slateDark).fontSize(9.2).font('Helvetica-Bold')
      .text(title + ': ', 58, y, { continued: true, width: CONTENT_WIDTH - 20 });
-  doc.font('Helvetica').text(desc, { lineGap: 3, align: 'justify' });
-  doc.y = doc.y + 4;
+  doc.font('Helvetica').text(desc, { lineGap: 2.8, align: 'justify' });
+  doc.y = doc.y + 3;
 }
 
 // =============================================================
@@ -102,66 +102,68 @@ doc.fillColor(COLORS.white).fontSize(11.5).font('Helvetica-Bold')
    .text('MINISTRY OF ROAD TRANSPORT & HIGHWAYS / MINISTRY OF RAILWAYS', 45, 82, { align: 'center', width: CONTENT_WIDTH });
 
 // Main Title
-doc.fillColor(COLORS.blue).fontSize(14).font('Helvetica-Bold')
-   .text('NATIONAL DIGITAL PLATFORM ARCHITECTURE', 45, 140, { align: 'center', width: CONTENT_WIDTH });
+doc.fillColor(COLORS.blue).fontSize(13).font('Helvetica-Bold')
+   .text('NATIONAL DIGITAL PUBLIC INFRASTRUCTURE (DPI)', 45, 138, { align: 'center', width: CONTENT_WIDTH });
 
-doc.fillColor(COLORS.navy).fontSize(32).font('Helvetica-Bold')
-   .text('NLAMS 2.0', 45, 165, { align: 'center', width: CONTENT_WIDTH });
+doc.fillColor(COLORS.navy).fontSize(30).font('Helvetica-Bold')
+   .text('VajraBhoomi', 45, 160, { align: 'center', width: CONTENT_WIDTH });
 
-doc.fillColor(COLORS.amber).fontSize(20).font('Helvetica-Bold')
-   .text('VAJRACORE', 45, 204, { align: 'center', width: CONTENT_WIDTH });
+doc.fillColor(COLORS.amber).fontSize(13).font('Helvetica-Bold')
+   .text('GOVERNMENT OF INDIA DIGITAL PUBLIC INFRASTRUCTURE (DPI)', 45, 196, { align: 'center', width: CONTENT_WIDTH });
 
-doc.fillColor(COLORS.slateMed).fontSize(12).font('Helvetica')
-   .text('End-to-End National Land Acquisition & Management System', 45, 232, { align: 'center', width: CONTENT_WIDTH });
+doc.fillColor(COLORS.slateMed).fontSize(11.5).font('Helvetica')
+   .text('National Land Governance & Acquisition Management Operating System', 45, 224, { align: 'center', width: CONTENT_WIDTH });
 
-doc.rect(180, 254, 235, 1.5).fill(COLORS.blue);
+doc.rect(175, 245, 245, 1.5).fill(COLORS.blue);
 
 // Badge / Highlights Box
-const boxY = 275;
-doc.roundedRect(60, boxY, CONTENT_WIDTH - 30, 175, 6).fillAndStroke(COLORS.white, COLORS.border);
+const boxY = 265;
+doc.roundedRect(60, boxY, CONTENT_WIDTH - 30, 182, 6).fillAndStroke(COLORS.white, COLORS.border);
 
-doc.fillColor(COLORS.navy).fontSize(11.5).font('Helvetica-Bold')
-   .text('CORE SYSTEM CAPABILITIES', 70, boxY + 14, { align: 'center', width: CONTENT_WIDTH - 50 });
+doc.fillColor(COLORS.navy).fontSize(11).font('Helvetica-Bold')
+   .text('CORE SYSTEM CAPABILITIES', 70, boxY + 12, { align: 'center', width: CONTENT_WIDTH - 50 });
 
 const highlights = [
-  ['Autonomous Multi-Agent AI Pipeline', 'Automated Legal, Geospatial, and R&R statutory scrutiny.'],
-  ['PostGIS Real-Time Spatial Cadastre', 'Instant ST_Intersects geofencing across restricted eco-zones.'],
-  ['RFCTLARR 2013 Statutory Compliance', 'Enforced state-machine: DRAFT -> 3A -> 3D -> AWARD -> POSSESSION.'],
-  ['Direct Benefit Transfer (DBT) Integration', 'Transparent compensation computation and disbursement tracking.'],
-  ['Multi-Tier Stakeholder Coordination', 'Unified portal for Ministries, CALA, Landowners, & Surveyors.']
+  ['Statutory Decision Support System (DSS)', 'AI as "Preparer", CALA District Collector as statutory "Approver" with Class-3 DSC.'],
+  ['OpenStreetMap & ESRI Satellite GIS Engine', 'Native Leaflet engine with 100% free raster tiles, zero API keys, and zero watermarks.'],
+  ['Urban Cadastral Linkage (UCL) & ULPIN', 'Direct spatial linking of City Survey plots to digital Property Cards via 14-digit Bhu-Aadhaar.'],
+  ['PostGIS Sub-Meter Spatial Geofencing', 'Instant ST_Intersects geofencing across restricted eco-zones, CRZ, and forest reserves.'],
+  ['RFCTLARR 2013 State Machine', 'Enforced statutory milestones: DRAFT -> 3A NOTIFIED -> 3D DECLARED -> AWARD -> POSSESSION.'],
+  ['Direct Benefit Transfer (DBT) Integration', 'Transparent compensation computation and disbursement tracking direct to bank accounts.']
 ];
 
-let curHY = boxY + 38;
+let curHY = boxY + 34;
 highlights.forEach(([title, desc]) => {
   doc.circle(78, curHY + 5, 2.5).fill(COLORS.emerald);
-  doc.fillColor(COLORS.slateDark).fontSize(9.5).font('Helvetica-Bold')
+  doc.fillColor(COLORS.slateDark).fontSize(9.2).font('Helvetica-Bold')
      .text(title + ' — ', 88, curHY, { continued: true, width: CONTENT_WIDTH - 85 });
   doc.font('Helvetica').fillColor(COLORS.slateMed).text(desc);
-  curHY += 24;
+  curHY += 23;
 });
 
 // Metadata Box at Bottom
-const metaY = 475;
-doc.roundedRect(60, metaY, CONTENT_WIDTH - 30, 205, 6).fillAndStroke(COLORS.white, COLORS.border);
+const metaY = 468;
+doc.roundedRect(60, metaY, CONTENT_WIDTH - 30, 218, 6).fillAndStroke(COLORS.white, COLORS.border);
 
-doc.fillColor(COLORS.navy).fontSize(11.5).font('Helvetica-Bold')
-   .text('PROJECT DOSSIER SPECIFICATIONS', 70, metaY + 14, { align: 'center', width: CONTENT_WIDTH - 50 });
+doc.fillColor(COLORS.navy).fontSize(11).font('Helvetica-Bold')
+   .text('PROJECT DOSSIER SPECIFICATIONS', 70, metaY + 12, { align: 'center', width: CONTENT_WIDTH - 50 });
 
 const metaFields = [
-  ['Platform Name', 'NLAMS 2.0 Vajracore'],
-  ['Core Mission', 'Digitizing India\'s Complete Land Acquisition Lifecycle'],
+  ['Platform Name', 'VajraBhoomi — NLAMS 2.0 Vajracore'],
+  ['Core Mission', 'Digitizing India\'s Complete Land Acquisition & Governance Lifecycle'],
   ['Statutory Mandate', 'RFCTLARR Act 2013 & PM GatiShakti National Master Plan'],
-  ['Technology Stack', 'Next.js 16, React 19, Express 4, PostgreSQL/PostGIS, Python FastAPI'],
+  ['Technology Stack', 'Next.js 16, React 19, Leaflet, Express 4, PostgreSQL/PostGIS, FastAPI'],
   ['AI Orchestrator', 'Port 8000 (Legal Scrutinizer, Geospatial Analyzer, R&R Calculator)'],
-  ['Backend API Engine', 'Port 4000 (Transactional State Machine & Cascading Audits)'],
-  ['Frontend GIS Portal', 'Port 3000 (Multi-Corridor High-Res Satellite Inspection Engine)'],
+  ['Backend API Engine', 'Port 4000 (RFCTLARR State Machine & UCL Spatial API)'],
+  ['National GIS Engine', 'Port 3000 (OpenStreetMap & Satellite Mega-Corridor Inspector)'],
+  ['Urban Cadastral Portal', '/cadastral-map (ULPIN Bhu-Aadhaar & Digital Property Card Sync)'],
   ['Target Audience', 'Central Ministries, State CALA, Landowners, Field Surveyors']
 ];
 
-let curMY = metaY + 38;
+let curMY = metaY + 34;
 metaFields.forEach(([label, val]) => {
-  doc.fillColor(COLORS.slateMed).fontSize(9.5).font('Helvetica-Bold').text(label + ':', 78, curMY, { width: 145 });
-  doc.fillColor(COLORS.slateDark).fontSize(9.5).font('Helvetica').text(val, 228, curMY, { width: CONTENT_WIDTH - 235 });
+  doc.fillColor(COLORS.slateMed).fontSize(9.2).font('Helvetica-Bold').text(label + ':', 78, curMY, { width: 145 });
+  doc.fillColor(COLORS.slateDark).fontSize(9.2).font('Helvetica').text(val, 228, curMY, { width: CONTENT_WIDTH - 235 });
   curMY += 19;
 });
 
@@ -179,15 +181,16 @@ drawSectionHeading('1', 'Executive Summary & Problem Statement');
 
 drawSubHeading('1.1 Background & The National Challenge');
 drawParagraph('Land acquisition is the singular foundational prerequisite for critical infrastructure development in India—powering national expressways (NHAI), dedicated freight corridors (DFCCIL), high-speed rail networks, industrial parks, and renewable mega-projects. The process is governed by the stringent mandates of the Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement (RFCTLARR) Act 2013.');
-drawParagraph('Despite clear legal provisions, infrastructure projects historically suffer from chronic delays (averaging 3 to 6 years), massive cost overruns, and severe social friction due to four fundamental systemic challenges:');
+drawParagraph('Despite clear legal provisions, infrastructure projects historically suffer from chronic delays (averaging 3 to 6 years), massive cost overruns, and severe social friction due to five fundamental systemic challenges:');
 
-drawBullet('Fragmented Stakeholder Workflows', 'Central Ministries, State Revenue Departments, District Collectors (acting as CALA), Land Requiring Bodies, and displaced citizens work in disconnected silos, relying on manual postal correspondence and paper files.');
+drawBullet('Siloed & Fragmented Bureaucracy', 'Central Ministries, State Revenue Departments, District Collectors (acting as CALA), Land Requiring Bodies, and displaced citizens work in disconnected silos, relying on manual postal correspondence and paper files.');
 drawBullet('Manual Title Scrutiny Bottlenecks', 'Validating ownership across thousands of cadastral parcels requires physical cross-verification of registered sale deeds, mutation extracts, and revenue records, leading to backlogs and human oversight.');
 drawBullet('Geospatial & Environmental Overlaps', 'Corridor alignments drafted without real-time GIS spatial validation frequently collide with Coastal Regulation Zones (CRZ), reserved forests, water bodies, or defense lands—resulting in environmental litigation.');
 drawBullet('Opaque R&R and Compensation Delays', 'Manual computation of Ready Reckoner circle rates, rural multipliers (1.0x to 2.0x), 100% Solatium, and 12% additional market value leads to disputes and lack of trust among land losers.');
+drawBullet('Urban Cadastral Disconnect', 'Urban municipal areas possess rich spatial City Survey maps and textual Property Cards (PR Cards), yet lack digital linkages using standard national identifiers like the 14-digit ULPIN (Bhu-Aadhaar).');
 
-drawSubHeading('1.2 The NLAMS 2.0 Vajracore Solution');
-drawParagraph('NLAMS 2.0 is a comprehensive, production-grade digital platform engineered to digitize, accelerate, and automate the entire land acquisition lifecycle. Operating at the confluence of Modern Web Engineering, PostGIS Spatial Analytics, and Autonomous AI Agents, NLAMS ensures complete transparency, statutory compliance, and seamless multi-agency coordination.');
+drawSubHeading('1.2 The VajraBhoomi Solution');
+drawParagraph('VajraBhoomi is a comprehensive, production-grade digital platform engineered to digitize, accelerate, and automate the entire land acquisition lifecycle. Operating at the confluence of Modern Web Engineering, PostGIS Spatial Analytics, OpenStreetMap GIS, and Autonomous AI Agents, VajraBhoomi ensures complete transparency, statutory compliance, and seamless multi-agency coordination.');
 
 // =============================================================
 // PAGE 3: SOLUTION UNIQUENESS & INNOVATIONS
@@ -197,17 +200,19 @@ doc.y = 42;
 drawHeader('Solution Uniqueness & Innovation');
 
 drawSectionHeading('2', 'Uniqueness & Disruptive Innovations');
-drawParagraph('While existing e-governance systems act as passive record repositories, NLAMS Vajracore acts as an Active, Intelligent Adjudication Platform with major technological differentiators:');
+drawParagraph('While existing e-governance systems act as passive record repositories, VajraBhoomi acts as an Active, Intelligent Adjudication Platform with major technological differentiators:');
 
-drawBullet('Autonomous Multi-Agent AI Scrutiny', 'Rather than relying on manual file pushing, our Python AI Orchestrator actively examines submitted proposals using 3 autonomous agents that check legal deeds, spatial buffers, and R&R math concurrently in real time.');
+drawBullet('Statutory Decision Support System (DSS) with HITL', 'Compulsory land acquisition cannot legally be delegated to an autonomous black-box algorithm. VajraBhoomi positions AI strictly as the "Preparer" (ingesting baseline deeds and drafting compensation awards) while the District Collector (CALA) acts as the statutory "Approver" with Government of India Class-3 Digital Signature Certificates (DSC).');
+
+drawBullet('Dynamic 3-Tier Confidence Triage', 'The AI engine evaluates its own statutory certainty: Green Flag (>90% confidence, clean title, zero buffer conflicts) fast-tracks for single-click CALA DSC sign-off; Amber Flag (70-89%) flags for Patwari ground inspection; Red Flag (<70%, disputed titles, encumbrances) automatically schedules mandatory Section 15 personal hearings.');
+
+drawBullet('Urban Cadastral Linkage (UCL) & ULPIN Integration', 'Bridges the gap between spatial City Survey map polygons and textual Property Cards (PR Cards) using the Government of India\'s 14-digit Unique Land Parcel Identification Number (ULPIN / Bhu-Aadhaar) stored in PostGIS table city_survey_plots.');
+
+drawBullet('OpenStreetMap & ESRI Satellite GIS Engine', 'Native Leaflet mapping engine featuring OpenStreetMap vector/raster tiles and high-resolution ESRI World Imagery—100% free, zero external API keys, zero watermarks, and sub-meter PostGIS spatial demarcation.');
 
 drawBullet('Sub-Second PostGIS Spatial Geofencing', 'Every proposed alignment is checked instantly against state-wide GIS environmental layers (Mangroves, Forests, Wildlife Corridors, Water Bodies) via PostGIS ST_Intersects, flagging violations before statutory gazette publication.');
 
-drawBullet('Cryptographic & Transactional State Machine', 'All statutory state transitions (3A to 3D to Award) are strictly enforced via atomic PostgreSQL transactions (BEGIN...COMMIT) with cascading integrity and immutable audit logging.');
-
-drawBullet('Transparent Citizen Empowerment', 'Displaced landowners can directly inspect their affected parcels on high-resolution satellite imagery, review exact valuation formulas, lodge Section 15 objections, and track DBT compensation direct to their bank accounts.');
-
-drawBullet('Direct Benefit Transfer (DBT) Integration', 'End-to-end statutory compensation calculation strictly follows the RFCTLARR formula, eliminating manual leakage and accelerating disbursement upon final award declaration.');
+drawBullet('Transparent Citizen Empowerment & DBT Integration', 'Displaced landowners inspect their affected parcels on OpenStreetMap, review valuation formulas with 100% Solatium, lodge Section 15 objections, and receive compensation directly to verified bank accounts via Direct Benefit Transfer (DBT).');
 
 // =============================================================
 // PAGE 4: TARGET AUDIENCE & STAKEHOLDER MATRIX
@@ -242,8 +247,8 @@ const stakeholders = [
   [
     'District CALA\n(Competent Authority)',
     'District Collector / Sub-Divisional\nMagistrate (Revenue)',
-    'Execute AI Scrutiny, conduct Section 15 objection hearings, advance RFCTLARR milestones, approve DBT compensation.',
-    'Automated legal and compensation calculation eliminates human errors and litigation.'
+    'Review AI Scrutiny, conduct Section 15 objection hearings, advance RFCTLARR milestones, sign awards with Class-3 DSC.',
+    'AI DSS eliminates paperwork while preserving constitutional safeguards and judicial discretion.'
   ],
   [
     'Citizen / Landowner\n(Affected Persons)',
@@ -281,23 +286,23 @@ stakeholders.forEach((row, idx) => {
   curTY += rowH;
 });
 
-doc.y = curTY + 12;
+doc.y = curTY + 10;
 drawSectionHeading('4', 'National Infrastructure Corridors Supported');
-drawParagraph('NLAMS incorporates full cadastral boundaries and revenue records for diverse national project archetypes:');
+drawParagraph('VajraBhoomi incorporates full cadastral boundaries and revenue records for diverse national project archetypes:');
 
 const scenariosList = [
-  'Pune-Nashik Semi-High Speed Rail (Pkg IV) — Maharashtra (Mulshi/Haveli agricultural & hilly transit)',
+  'Navi Mumbai International Airport (NMIA) — 1,160 ha twin-runway corridor, terminal & Ulwe CRZ eco-buffer',
+  'Mumbai-Ahmedabad High-Speed Rail (MAHSR Bullet Train) — Navsari/Surat viaduct, casting yard, & TSS-09',
+  'Delhi-Mumbai Greenfield Expressway (NE-4, Pkg 14) — 8-lane 70m ROW mainline & Vadodara Cloverleaf Interchange',
+  'Pune-Mumbai Expressway Missing Link — Khandala Ghat bypass twin tunnels, Kusgaon viaduct & Borghat eco-zone',
   'Western Dedicated Freight Corridor (WDFC Feeder Spur) — Haryana (Gurugram/Sohna industrial logistics zone)',
-  'Delhi-Mumbai Greenfield Expressway (NE-4, Pkg 14) — Gujarat (Vadodara/Bharuch 8-lane expressway alignment)',
-  'PM GatiShakti Multi-Modal Logistics Park (MMLP) — Maharashtra (Talegaon container hub & rail sidings)',
-  'Khavda Ultra Mega Renewable Energy Hybrid Park — Gujarat (Kutch 765kV green energy transmission substation)',
-  'Bengaluru-Chennai Expressway (NE-7) — Karnataka (Hoskote-Malur industrial corridor package)'
+  'Khavda Ultra Mega Renewable Energy Hybrid Park — Gujarat (Kutch 765kV green energy transmission substation)'
 ];
 
 scenariosList.forEach((s) => {
   doc.circle(50, doc.y + 5, 2.5).fill(COLORS.amber);
-  doc.fillColor(COLORS.slateDark).fontSize(9).font('Helvetica').text(s, 58, doc.y, { width: CONTENT_WIDTH - 20 });
-  doc.y = doc.y + 3;
+  doc.fillColor(COLORS.slateDark).fontSize(8.8).font('Helvetica').text(s, 58, doc.y, { width: CONTENT_WIDTH - 20 });
+  doc.y = doc.y + 2.5;
 });
 
 // =============================================================
@@ -308,25 +313,25 @@ doc.y = 42;
 drawHeader('System Architecture & Technology Stack');
 
 drawSectionHeading('5', 'End-to-End System Architecture');
-drawParagraph('NLAMS Vajracore is engineered on a resilient, modular 3-tier microservices architecture ensuring high throughput, geographic redundancy, and enterprise security:');
+drawParagraph('VajraBhoomi is engineered on a resilient, modular 3-tier microservices architecture ensuring high throughput, geographic redundancy, and enterprise security:');
 
 // Draw Vector Architecture Diagram
-const archY = doc.y + 8;
+const archY = doc.y + 6;
 
 // Layer 1: Frontend
-doc.roundedRect(55, archY, CONTENT_WIDTH - 20, 56, 5).fillAndStroke(COLORS.blueLight, COLORS.blue);
+doc.roundedRect(55, archY, CONTENT_WIDTH - 20, 58, 5).fillAndStroke(COLORS.blueLight, COLORS.blue);
 doc.fillColor(COLORS.blue).fontSize(9.5).font('Helvetica-Bold')
    .text('PRESENTATION LAYER — NEXT.JS 16 & REACT 19 (Port 3000)', 65, archY + 8);
-doc.fillColor(COLORS.slateDark).fontSize(8.2).font('Helvetica')
-   .text('• Next.js App Router · TailwindCSS v4 · Radix UI Primitives · Dynamic Multi-Corridor GIS Satellite Viewer\n• Reactive State Machine Dashboard · Secure JWT Cookie Injection · Client-side PDF Blob Preview Engine', 65, archY + 23);
+doc.fillColor(COLORS.slateDark).fontSize(8).font('Helvetica')
+   .text('• Next.js App Router · TailwindCSS v4 · Radix UI · Leaflet GIS (OpenStreetMap + ESRI Satellite)\n• Urban Cadastral Linkage (UCL) Dual-Pane · Ground-Truth Cadastral Revenue Inspector\n• Reactive State Machine Dashboard · JWT Cookie Injection · Client-side PDF Preview Engine', 65, archY + 22);
 
 // Arrow Down
 doc.save();
 doc.strokeColor(COLORS.slateMed).lineWidth(1.2);
-doc.moveTo(PAGE_WIDTH / 2, archY + 56).lineTo(PAGE_WIDTH / 2, archY + 74).stroke();
+doc.moveTo(PAGE_WIDTH / 2, archY + 58).lineTo(PAGE_WIDTH / 2, archY + 74).stroke();
 doc.polygon([PAGE_WIDTH / 2 - 3, archY + 70], [PAGE_WIDTH / 2 + 3, archY + 70], [PAGE_WIDTH / 2, archY + 75]).fill(COLORS.slateMed);
 doc.fillColor(COLORS.slateMed).fontSize(7.5).font('Helvetica-Bold')
-   .text('REST API Proxy Rewrite (/api/*) — Zero CORS Friction', PAGE_WIDTH / 2 + 8, archY + 60);
+   .text('REST API Proxy Rewrite (/api/*) — Zero CORS Friction', PAGE_WIDTH / 2 + 8, archY + 62);
 doc.restore();
 
 // Layer 2: Express Backend
@@ -334,8 +339,8 @@ const beY = archY + 76;
 doc.roundedRect(55, beY, CONTENT_WIDTH - 20, 58, 5).fillAndStroke(COLORS.amberLight, COLORS.amber);
 doc.fillColor(COLORS.amber).fontSize(9.5).font('Helvetica-Bold')
    .text('APPLICATION & TRANSACTION ENGINE — EXPRESS 4 / NODE.JS (Port 4000)', 65, beY + 8);
-doc.fillColor(COLORS.slateDark).fontSize(8.2).font('Helvetica')
-   .text('• JWT Role-Based Access Control (RBAC) Middleware · Centralized Permission Engine\n• RFCTLARR Statutory State Machine (Draft -> 3A -> 3D -> Award -> Possession)\n• PostgreSQL Atomic Transactions (BEGIN...COMMIT) · Cascading Delete Cleanup · Audit Trail Engine', 65, beY + 23);
+doc.fillColor(COLORS.slateDark).fontSize(8).font('Helvetica')
+   .text('• JWT Role-Based Access Control (RBAC) Middleware · Centralized Permission Engine\n• RFCTLARR Statutory State Machine (Draft -> 3A -> 3D -> Award -> Possession)\n• UCL Cadastral Spatial Engine (/api/cadastral/*) · PostgreSQL Transactions (BEGIN...COMMIT) · Audit Logging', 65, beY + 22);
 
 // Split Arrows Down
 const arrowSplitY = beY + 58;
@@ -354,25 +359,25 @@ const dbY = arrowSplitY + 24;
 const halfW = (CONTENT_WIDTH - 30) / 2;
 
 // DB Box
-doc.roundedRect(55, dbY, halfW, 74, 5).fillAndStroke(COLORS.emeraldLight, COLORS.emerald);
+doc.roundedRect(55, dbY, halfW, 76, 5).fillAndStroke(COLORS.emeraldLight, COLORS.emerald);
 doc.fillColor(COLORS.emerald).fontSize(9).font('Helvetica-Bold')
    .text('POSTGRESQL + POSTGIS (Port 5432)', 65, dbY + 8);
 doc.fillColor(COLORS.slateDark).fontSize(7.5).font('Helvetica')
-   .text('• Spatial Geometry (WKT / GeoJSON)\n• ST_Intersects & ST_Distance Queries\n• Cadastral Parcels & Ready Reckoners\n• Version-Tracked Statutory Documents\n• Immutable Audit Event Trails', 65, dbY + 20);
+   .text('• Spatial Geometry (WKT / GeoJSON)\n• ST_Intersects & ST_Distance Queries\n• UCL city_survey_plots & ULPIN Bhu-Aadhaar\n• Version-Tracked Statutory Documents\n• Immutable Audit Event Trails', 65, dbY + 20);
 
 // AI Box
-doc.roundedRect(65 + halfW, dbY, halfW, 74, 5).fillAndStroke('#F5F3FF', '#7C3AED');
+doc.roundedRect(65 + halfW, dbY, halfW, 76, 5).fillAndStroke('#F5F3FF', '#7C3AED');
 doc.fillColor('#7C3AED').fontSize(9).font('Helvetica-Bold')
    .text('AI MULTI-AGENT ORCHESTRATOR (Port 8000)', 75 + halfW, dbY + 8);
 doc.fillColor(COLORS.slateDark).fontSize(7.5).font('Helvetica')
-   .text('• Python FastAPI Service (Async Worker)\n• Legal Deed Scrutinizer (pdfplumber)\n• Indian Honorific & Name Matcher\n• Geospatial Environmental Intersection\n• RFCTLARR Deterministic Award Math', 75 + halfW, dbY + 20);
+   .text('• Python FastAPI Service (Async Worker)\n• Legal Deed Scrutinizer (pdfplumber)\n• Decision Support System (DSS) Triage Matrix\n• Geospatial Environmental Intersection\n• RFCTLARR Deterministic Award Math', 75 + halfW, dbY + 20);
 
 doc.y = dbY + 86;
 
 drawSubHeading('5.1 Key Technology Specifications');
-drawBullet('Frontend Framework', 'Next.js 16 with React 19 Server & Client Components, Lucide Icons, and GPU-accelerated canvas styling.');
+drawBullet('Frontend Framework', 'Next.js 16 with React 19 Server/Client Components, Leaflet/React-Leaflet, and OpenStreetMap/ESRI raster layers.');
 drawBullet('Backend Runtime', 'Node.js LTS with Express 4, pg connection pool, and bcrypt password hashing.');
-drawBullet('Geospatial Database', 'PostgreSQL 14+ with PostGIS spatial extensions for coordinate projection (EPSG:4326).');
+drawBullet('Geospatial Database', 'PostgreSQL 14+ with PostGIS spatial extensions for coordinate projection (EPSG:4326) and R-tree GIST indexing.');
 drawBullet('AI Engine', 'Python 3.10+ FastAPI, Uvicorn, with dual-engine scrutiny (Claude 3.5 Sonnet / Heuristic Regex).');
 
 // =============================================================
@@ -383,7 +388,7 @@ doc.y = 42;
 drawHeader('RFCTLARR Statutory Workflow');
 
 drawSectionHeading('6', 'Statutory RFCTLARR 2013 Workflow Engine');
-drawParagraph('The platform embeds the statutory provisions of the RFCTLARR Act 2013 directly into its backend state machine. Transitions between lifecycle stages are mathematically and legally guarded:');
+drawParagraph('VajraBhoomi embeds the statutory provisions of the RFCTLARR Act 2013 directly into its backend state machine. Transitions between lifecycle stages are mathematically and legally guarded:');
 
 // Draw Vector State Machine Diagram
 const smY = doc.y + 8;
@@ -395,7 +400,7 @@ const stages = [
   ['1. DRAFT', 'Proposal Setup\nShapefile Upload\nDeed Attachment', COLORS.slateDark],
   ['2. 3A NOTIFIED', 'Intent to Acquire\nSection 15 Window\nCitizen Objections', COLORS.blue],
   ['3. 3D DECLARED', 'Final Declaration\nHearing Closed\nLand Vested', COLORS.amber],
-  ['4. AWARD', 'Compensation Order\n100% Solatium\nR&R Grant Calc', COLORS.emerald],
+  ['4. AWARD', 'Compensation Order\n100% Solatium\nClass-3 DSC Sign', COLORS.emerald],
   ['5. POSSESSION', 'DBT Direct Payout\nLegal Eviction/Clear\nPhysical Handover', COLORS.navy]
 ];
 
@@ -422,7 +427,7 @@ drawSubHeading('6.1 Breakdown of Statutory Milestones');
 drawBullet('Stage 1: DRAFT (Project Demarcation)', 'The Requiring Body registers the project corridor, uploads the digital GeoJSON boundary, attaches official revenue maps, and defines cadastral parcel survey numbers.');
 drawBullet('Stage 2: SECTION 3A (Preliminary Notification)', 'The Competent Authority publishes the gazette notification under Section 3A. This automatically triggers a mandatory objection window during which affected landowners can file formal Section 15 grievances.');
 drawBullet('Stage 3: SECTION 3D (Declaration of Acquisition)', 'The CALA conducts Section 15 hearing proceedings, records official hearing resolution notes, and declares final acquisition. Under RFCTLARR, land vests legally with the Government, free from all encumbrances.');
-drawBullet('Stage 4: SECTION 23 / 30 (Award Determination)', 'The AI R&R engine computes the comprehensive award: Base Market Value x Rural Factor (1.0x-2.0x) + 100% Solatium + 12% Additional Market Value + Rehabilitation Grants. Formal awards are apportioned per survey Gat.');
+drawBullet('Stage 4: SECTION 23 / 30 (Award Determination & DSC Sign-off)', 'The AI R&R engine computes the draft award: Base Market Value x Rural Factor (1.0x-2.0x) + 100% Solatium + 12% Additional Market Value + Rehabilitation Grants. The District Collector reviews, exercises judicial discretion, and digitally signs the award with Class-3 DSC.');
 drawBullet('Stage 5: SECTION 38 (Disbursement & Final Possession)', 'Compensation is credited directly to verified landowner bank accounts via integrated Direct Benefit Transfer (DBT). Upon 100% financial disbursement, physical possession certificates are issued.');
 
 // =============================================================
@@ -432,7 +437,7 @@ doc.addPage();
 doc.y = 42;
 drawHeader('Multi-Agent AI Scrutiny Pipeline');
 
-drawSectionHeading('7', 'Multi-Agent AI Scrutiny Pipeline (Port 8000)');
+drawSectionHeading('7', 'Multi-Agent AI Scrutiny & Decision Support System (Port 8000)');
 drawParagraph('When an acquisition proposal is submitted, the CALA triggers the AI Scrutiny run. Three specialized agents execute in parallel:');
 
 // Draw AI Agents Layout
@@ -459,32 +464,32 @@ doc.fillColor(COLORS.slateDark).fontSize(7.5).font('Helvetica')
 
 doc.y = aiBoxY + 128;
 
-drawSubHeading('7.1 AI Orchestrator Execution Flow');
-drawParagraph('1. The CALA clicks "Run AI Scrutiny" on the proposal workbench, transmitting the proposal ID to the Node.js backend.\n2. The backend sends an authenticated service-to-service request (using X-Service-Key) to the Python FastAPI Orchestrator on Port 8000.\n3. The orchestrator dispatches asynchronous tasks to the Legal, Geospatial, and R&R agents concurrently.\n4. The agents extract data from uploaded deeds, query PostGIS for spatial collisions, and execute the RFCTLARR formula.\n5. An aggregated JSON scrutiny dossier is stored in PostgreSQL and returned to the workbench with visual pass/fail badges.');
+drawSubHeading('7.1 AI Orchestrator Execution Flow & DSS Confidence Triage');
+drawParagraph('1. The CALA clicks "Run AI Scrutiny" on the proposal workbench, transmitting the proposal ID to the Node.js backend.\n2. The backend sends an authenticated service-to-service request (using X-Service-Key) to the Python FastAPI Orchestrator on Port 8000.\n3. The orchestrator dispatches asynchronous tasks to the Legal, Geospatial, and R&R agents concurrently.\n4. The agents extract data from uploaded deeds, query PostGIS for spatial collisions, and execute the RFCTLARR formula.\n5. The Decision Support System assigns a 3-tier confidence rating: Green (>90%) for immediate fast-track sign-off, Amber (70-89%) for ground inspection, and Red (<70%) for mandatory Section 15 personal hearings.');
 
 // =============================================================
-// PAGE 8: GIS VIEWER, FEASIBILITY & STRATEGIC IMPACT
+// PAGE 8: GIS VIEWER, UCL MODULE, FEASIBILITY & IMPACT
 // =============================================================
 doc.addPage();
 doc.y = 42;
-drawHeader('GIS Viewer, Feasibility & Impact');
+drawHeader('GIS, Urban Cadastre & National Impact');
 
-drawSectionHeading('8', 'High-Resolution GIS Cadastral Viewer');
-drawParagraph('The platform features a GPU-accelerated satellite GIS canvas for state-level monitoring and cadastre inspection:');
+drawSectionHeading('8', 'OpenStreetMap GIS & Urban Cadastral Linkage (UCL)');
+drawParagraph('VajraBhoomi combines national macro-corridor monitoring with micro-cadastral urban parcel synchronization:');
 
-drawBullet('Click-to-Inspect Any Cadastral Parcel', 'Clicking anywhere on the satellite drops a reticle, querying PostGIS to retrieve authentic ground-truth revenue data: Latitude/Longitude to 6 decimal places, Gat/Survey Number, Village/Taluka, Land Classification, and Circle Rate valuation.');
-drawBullet('Dynamic Multi-Corridor Geofencing', 'Live navigation across authentic corridors including Navi Mumbai Airport, High-Speed Rail, Delhi-Mumbai Expressway, and Pune-Mumbai Missing Link.');
-drawBullet('Interactive Layer Filters & MIS Reporting', 'Instant toggles between Acquired (Emerald), In Progress (Amber), and Disputed (Rose) parcels with one-click executive CSV report export.');
+drawBullet('OpenStreetMap & ESRI Satellite National GIS (/dashboard)', 'Features true PostGIS spatial demarcation across NMIA Airport, Bullet Train MAHSR, Delhi-Mumbai Expressway NE-4, and Pune-Mumbai Missing Link with live camera transitions, layer toggles, and zero watermarks.');
+drawBullet('Surrounding Land Cadastral Inspector', 'Clicking anywhere across India on OpenStreetMap drops a live GNSS reticle pin and calculates real-time revenue survey numbers, revenue villages/talukas, land classifications, government ready reckoner circle rates, and 100% Solatium valuations.');
+drawBullet('Urban Cadastral Linkage (UCL) Module (/cadastral-map)', 'Directly links City Survey map polygons to textual Property Cards (PR Cards) using the 14-digit ULPIN (Bhu-Aadhaar) with split-screen PDF preview.');
 
-drawSectionHeading('9', 'Feasibility, Viability & Strategic Impact');
+drawSectionHeading('9', 'Feasibility, Viability & Strategic National Impact');
 
 drawSubHeading('9.1 Technical & Operational Feasibility');
-drawParagraph('• Built on proven open-source enterprise foundations (PostgreSQL, PostGIS, Node.js, Python), eliminating proprietary licensing fees.\n• The AI engine features a resilient dual-mode architecture: if third-party LLM APIs are unreachable, it automatically falls back to deterministic regex heuristics, guaranteeing 100% operational uptime.\n• Next.js internal proxy rewrites (/api/*) eliminate CORS vulnerabilities, streamlining multi-tier deployment.');
+drawParagraph('• Built on proven open-source foundations (PostgreSQL, PostGIS, Node.js, Leaflet, OpenStreetMap, Python), eliminating proprietary licensing fees.\n• The AI engine features a resilient dual-mode architecture: if third-party LLM APIs are unreachable, it automatically falls back to deterministic regex heuristics, guaranteeing 100% operational uptime.');
 
 drawSubHeading('9.2 Economic & Commercial Viability');
-drawParagraph('• Cloud-Native Scalability: Can be hosted centrally on Government Cloud infrastructure (NIC MeghRaj or MeitY-empanelled CSPs), serving all 28 States and 8 UTs from a unified cluster.\n• Massive Cost Reduction: Automating legal title searches, spatial collision checks, and compensation math saves hundreds of crores in administrative overhead, consultancy fees, and court litigation costs for every major corridor.');
+drawParagraph('• Cloud-Native Scalability: Can be hosted centrally on Government Cloud infrastructure (NIC MeghRaj), serving all 28 States and 8 UTs.\n• Massive Cost Reduction: Automating legal title searches, spatial collision checks, and compensation math saves hundreds of crores in administrative overhead, consultancy fees, and court litigation costs for every major corridor.');
 
-drawSubHeading('9.3 Strategic National Benefits & Social Impact');
+drawSubHeading('9.3 Strategic National Benefits & Social Impact (Viksit Bharat 2047)');
 drawParagraph('• Eradication of Project Stalls: Pre-emptively detecting ecological violations and forged title deeds before Section 3D declaration eliminates 90% of judicial stay orders.\n• Citizen Empowerment & Social Justice: Direct landowner portal access, transparent valuation breakdowns, and direct-to-bank DBT transfers eliminate middlemen, bribes, and under-compensation grievances.\n• Alignment with PM GatiShakti: Integrates seamlessly with the National Master Plan for Multi-Modal Connectivity, ensuring that land acquisition accelerates India\'s economic growth.');
 
 // =============================================================
@@ -500,7 +505,7 @@ for (let i = 0; i < range.count; i++) {
     // Draw footer line and text well above bottom boundary
     doc.rect(45, PAGE_HEIGHT - 32, CONTENT_WIDTH, 1).fill(COLORS.border);
     doc.fillColor(COLORS.slateLight).fontSize(8).font('Helvetica')
-       .text(`NLAMS 2.0 Vajracore — SIH 2026 Project Dossier`, 45, PAGE_HEIGHT - 25, { width: CONTENT_WIDTH / 2, align: 'left', lineBreak: false });
+       .text(`VajraBhoomi — SIH 2026 Project Dossier`, 45, PAGE_HEIGHT - 25, { width: CONTENT_WIDTH / 2, align: 'left', lineBreak: false });
     doc.text(`Page ${i + 1} of ${range.count}`, PAGE_WIDTH / 2, PAGE_HEIGHT - 25, { width: CONTENT_WIDTH / 2, align: 'right', lineBreak: false });
     doc.restore();
   }

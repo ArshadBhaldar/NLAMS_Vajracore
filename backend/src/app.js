@@ -13,6 +13,7 @@ const compensationRoutes = require('./routes/compensation.routes');
 const objectionRoutes = require('./routes/objection.routes');
 const auditRoutes = require('./routes/audit.routes');
 const internalRoutes = require('./routes/internal.routes');
+const cadastralRoutes = require('./routes/cadastral.routes');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/compensation', compensationRoutes);
 app.use('/api/objections', objectionRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/internal', internalRoutes);
+app.use('/api/cadastral', cadastralRoutes);
 
 // 404 for anything unmatched
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));

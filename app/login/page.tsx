@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { ShieldCheck, Building2, Scale, UserCheck, BarChart3, Camera, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react"
+import { Building2, Scale, UserCheck, BarChart3, Camera, Lock, Mail, ArrowRight, CheckCircle2 } from "lucide-react"
+import { VajraBhoomiLogo } from "@/components/vajrabhoomi-logo"
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -33,15 +34,13 @@ export default function LoginPage() {
       <header className="border-b border-slate-800/80 bg-slate-900/60 px-6 py-2.5 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex size-7 items-center justify-center rounded-md border border-slate-700 bg-slate-800">
-              <ShieldCheck className="size-4 text-amber-400" />
-            </div>
+            <VajraBhoomiLogo size={30} />
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-300">
                 भारत सरकार | Government of India
               </p>
               <p className="text-[10px] text-slate-400">
-                Digital Public Infrastructure for Land Governance (RFCTLARR 2013)
+                VajraBhoomi &bull; Digital Public Infrastructure for Land Governance (RFCTLARR 2013)
               </p>
             </div>
           </div>
@@ -57,14 +56,19 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-6">
           {/* Official Emblem & Portal Title */}
           <div className="text-center">
-            <div className="mx-auto mb-3.5 flex size-14 items-center justify-center rounded-2xl border border-slate-700/80 bg-gradient-to-b from-slate-800 to-slate-900 shadow-xl shadow-black/40">
-              <ShieldCheck className="size-7 text-amber-400" />
+            <div className="mx-auto mb-3.5 flex justify-center">
+              <VajraBhoomiLogo size={58} />
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">
-              NLAMS <span className="font-semibold text-amber-400">Vajracore</span>
-            </h1>
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-white">
+                Vajra<span className="text-amber-400 font-semibold">Bhoomi</span>
+              </h1>
+              <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-mono font-bold text-amber-300 border border-amber-500/30">
+                वज्रभूमि
+              </span>
+            </div>
             <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-slate-400">
-              National Land Acquisition &amp; Management System
+              National Land Governance &amp; Management System
             </p>
             <p className="mt-2 text-xs text-slate-400">
               Statutory Multi-Authority Single Sign-On Portal
@@ -234,7 +238,7 @@ export default function LoginPage() {
 
       {/* Bottom Bar */}
       <footer className="border-t border-slate-800/80 bg-slate-900/60 py-3 text-center text-[10px] text-slate-400">
-        &copy; 2026 National Land Acquisition &amp; Management System (NLAMS 2.0). All Rights Reserved.
+        &copy; 2026 VajraBhoomi (वज्रभूमि) &bull; National Land Governance &amp; Acquisition System. All Rights Reserved.
       </footer>
     </div>
   )

@@ -1,75 +1,82 @@
-# NLAMS 2.0 (National Land Acquisition & Management System) - Vajracore
-## Comprehensive Project Documentation for Smart India Hackathon (SIH) 2026
+# VajraBhoomi (वज्रभूमि) — National Land Governance & Acquisition System
+## Comprehensive Technical & Statutory Project Documentation | Smart India Hackathon (SIH 2026)
+### Platform: NLAMS 2.0 Vajracore (Digital Public Infrastructure for Land Governance)
 
 ---
 
 ## 1. Executive Summary & Problem Statement
 
-### 1.1 Background & The Problem Statement
-Land acquisition is a foundational pillar for any nation's infrastructure development, including highways, high-speed railways, industrial corridors, irrigation projects, and urban modernization. In India, the process is governed by the stringent **Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement (RFCTLARR) Act 2013**. 
+### 1.1 Background & The National Challenge
+Land acquisition is the single most critical dependency for India's infrastructure ambitions, spanning national expressways (NHAI), high-speed rail corridors (NHSRCL), dedicated freight corridors (DFCCIL), renewable energy mega-parks, and multi-modal logistics hubs under the **PM GatiShakti National Master Plan**. In India, land acquisition is governed by the stringent mandates of the **Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement (RFCTLARR) Act 2013**.
 
-Despite clear statutory guidelines, the execution suffers from crippling bottlenecks:
-1. **Fragmented Workflows**: A lack of standardized, digital coordination among Requiring Bodies (NHAI, Railways), State Governments, District Administrations, and Central Ministries leads to information silos.
-2. **Manual Scrutiny & Inaccuracies**: Verification of statutory title deeds, cadastral land records, and landowner credentials is done manually. This is highly error-prone and leads to protracted legal disputes.
-3. **Geospatial & Ecological Discrepancies**: Land alignments drawn without high-precision GIS data often inadvertently overlap with Coastal Regulation Zones (CRZ), protected forests, or water bodies, causing project stalls pending environmental clearances.
-4. **Opaque Compensation (R&R) Disbursal**: Calculations for statutory compensation are manual and opaque. Affected citizens lack real-time visibility into their compensation status, leading to mass grievances and protests.
+Despite comprehensive statutory rules, land acquisition projects routinely suffer from 3 to 5 years of crippling delays caused by systemic bottlenecks:
+1. **Siloed & Fragmented Bureaucracy**: Lack of unified coordination among Requiring Bodies (NHAI, MoRTH, Railways), State Revenue Departments, District Collectorates (CALA), and Central Ministries results in administrative gridlock.
+2. **Manual Scrutiny & Title Deed Inconsistencies**: Verification of land ownership deeds, inheritance claims, encumbrance records, and 7/12 extracts is conducted manually, resulting in disputed ownership and prolonged court litigation (*lis pendens*).
+3. **Geospatial & Ecological Discrepancies**: Land acquisition alignments drawn without high-precision GIS data inadvertently encroach upon Coastal Regulation Zones (CRZ-I), reserved wildlife sanctuaries, defense buffers, or water bodies—triggering stay orders from the National Green Tribunal (NGT).
+4. **Opaque Valuation & Public Distrust**: Manual calculation of market values, rural multipliers, 100% Solatium, and R&R entitlement leads to allegations of corruption, under-compensation, and public unrest among displaced farmers.
+5. **Urban Cadastral Disconnect**: Urban municipal areas possess rich spatial City Survey maps and textual Property Cards (PR Cards), yet no digital mechanism links these datasets using standard national identifiers like the **ULPIN (Unique Land Parcel Identification Number / Bhu-Aadhaar)**.
 
-### 1.2 Our Solution: NLAMS Vajracore
-**NLAMS 2.0 (Vajracore)** is a production-grade, web-based digital platform that digitizes the entire land acquisition lifecycle. From the initial project proposal and geospatial geofencing to multi-agent AI legal scrutiny, public objection redressal, and Direct Benefit Transfer (DBT) of compensation—the system enforces standardized workflows and absolute compliance with the RFCTLARR Act 2013.
-
----
-
-## 2. Uniqueness of the Solution
-
-While existing e-governance systems act as passive data repositories, NLAMS Vajracore acts as an **Active, Intelligent Adjudicator**:
-- **Multi-Agent AI Ecosystem**: We deploy independent AI agents (Legal, Geospatial, and R&R) that concurrently audit proposals in real-time, eliminating human bias and manual verification delays.
-- **Dynamic Cadastral Geofencing & Intersects**: True PostGIS spatial integration means every drawn polygon on our map instantly queries actual ground-truth data—such as revenue survey numbers and ecological buffers—preventing unviable alignments on day one.
-- **Immutable Statutory State Machine**: The system strictly enforces the legal pipeline (Draft → 3A → 3D → Award → Possession). A stage cannot be advanced without resolving prior statutory requirements, backed by PostgreSQL cascading transactions.
-- **Transparent Citizen Empowerment**: Displaced landowners can directly inspect their affected parcels on high-resolution satellite imagery, review exact valuation formulas, lodge Section 15 objections, and track DBT compensation.
+### 1.2 The Solution: VajraBhoomi (वज्रभूमि)
+**VajraBhoomi** is a state-of-the-art, production-grade Digital Public Infrastructure (DPI) platform engineered to digitize, automate, and legally streamline the complete land acquisition and governance lifecycle. Built on an immutable PostgreSQL/PostGIS foundation, a high-performance Node.js API engine, a multi-agent Python AI scrutiny microservice, and a Next.js 16 frontend with interactive OpenStreetMap GIS capabilities, VajraBhoomi guarantees zero paper delays, zero mock data, and 100% compliance with the RFCTLARR Act 2013.
 
 ---
 
-## 3. Target Audience & Stakeholders
+## 2. Uniqueness & Architectural Innovations
 
-NLAMS 2.0 connects every participant in the acquisition ecosystem through role-based, specialized portals:
+### 2.1 Statutory Decision Support System (DSS) with Human-in-the-Loop (HITL)
+Under Indian administrative law and RFCTLARR Act 2013, sovereign decisions—such as issuing statutory declarations under Section 19/3D, deciding citizen objections under Section 15, and passing final compensation awards under Section 23/31—cannot be legally outsourced to an autonomous artificial intelligence algorithm. 
 
-1. **Requiring Bodies (e.g., NHAI, Dedicated Freight Corridor Corporation)**
-   - *Role*: Propose projects, upload physical title deeds, and map exact corridor boundaries using our geospatial toolkit.
-2. **Competent Authority for Land Acquisition (CALA / District Collector)**
-   - *Role*: The primary adjudicator. Runs the AI scrutiny pipeline, resolves Section 15 citizen objections, advances statutory gazette stages, and approves final DBT compensation payouts.
-3. **Citizens / Landowners**
-   - *Role*: The affected populace. They can log in to view affected parcels, track compensation transparently, raise statutory objections during the 3A phase, and submit ownership proofs.
-4. **Field Surveyors**
-   - *Role*: On-ground agents capturing physical GNSS locations and submitting real-time inspection checklists for the proposed land.
-5. **State / Central Monitors (e.g., MoRTH)**
-   - *Role*: Strategic oversight. They access the National GIS Dashboard to view multi-state project progress, identify bottlenecks, and generate executive MIS reports.
+**VajraBhoomi explicitly positions AI not as an autonomous judge, but as an auditable Decision Support System (DSS) within a strict Human-in-the-Loop (HITL) architecture**:
+- **AI as the "Preparer"**: Autonomous AI agents parse deeds, execute spatial PostGIS intersection audits, and compute draft compensation award sheets including 100% Solatium and 12% statutory interest.
+- **Human Authority as the "Approver"**: The Competent Authority for Land Acquisition (CALA / District Collector) reviews the AI audit breakdown, retains ultimate judicial discretion, and digitally signs the legal decree using Government of India **Class-3 Digital Signature Certificates (DSC)**.
+- **Dynamic 3-Tier Confidence Triage**:
+  - 🟢 **Green Flag (>90% Confidence)**: Clean title, single Khatedar, zero statutory buffer violations. Fast-tracks for single-click CALA DSC countersignature.
+  - 🟡 **Amber Flag (70–89% Confidence)**: Area variance between RoR and GIS polygon, or multiple joint heirs. Flags for Patwari ground inspection.
+  - 🔴 **Red Flag (<70% Confidence)**: Encumbrances, court injunctions, or forest/CRZ overlaps. Automatically schedules mandatory personal hearings before the Collector under Section 15.
+
+### 2.2 Urban Cadastral Linkage (UCL) Module & ULPIN / Bhu-Aadhaar Integration
+VajraBhoomi introduces a dedicated **Urban Cadastral Linkage (UCL)** module (`/cadastral-map`) that solves the urban land record problem:
+- **ULPIN as Primary Key**: Links spatial City Survey map boundaries (polygons) with textual Property Cards (PR Cards) using the Government of India's 14-digit **Unique Land Parcel Identification Number (ULPIN)**.
+- **PostGIS Spatial Table (`city_survey_plots`)**: Stores polygon geometries, CTS numbers, ward/division, mutation history, encumbrance status, and property card URLs.
+- **Dual-Pane Interactive Interface**: Simultaneously displays the spatial cadastral parcel on an interactive OpenStreetMap alongside the authenticated Property Card PDF with instant search by ULPIN or CTS Number.
+
+### 2.3 Native OpenStreetMap (OSM) & ESRI Satellite GIS Engine
+VajraBhoomi features an interactive, high-precision Leaflet GIS map (`/dashboard`) powered by genuine **OpenStreetMap (OSM)** raster tiles with a 1-click **ESRI World Imagery Satellite** toggle:
+- **100% Free & Open-Source**: Zero external API keys, zero watermarks, and zero vendor lock-in.
+- **Sub-Meter PostGIS Geofencing**: Displays real spatial corridors and parcel boundaries for major national megaprojects (NMIA Airport, Bullet Train MAHSR, Delhi-Mumbai Expressway NE-4, and Pune-Mumbai Missing Link).
+- **Surrounding Land Cadastral Inspector**: Clicking anywhere across India on the OpenStreetMap drops a live GNSS reticle pin and calculates real-time revenue survey numbers, revenue villages/talukas, land classifications, government ready reckoner circle rates, and 100% Solatium valuations.
 
 ---
 
-## 4. System Architecture & Technologies
+## 3. Stakeholders & Role-Based Workspaces
 
-NLAMS Vajracore employs a robust, highly scalable 3-tier microservices architecture designed for national deployment.
+VajraBhoomi provides dedicated, security-hardened workspaces tailored for every participant in the acquisition ecosystem:
 
-### 4.1 Technology Stack
-- **Frontend Layer (Port 3000)**: Built on **Next.js 16 (App Router)** and **React 19**, utilizing **TailwindCSS v4** and **Radix UI Primitives** for a highly responsive, GPU-accelerated interface.
-- **Backend API Engine (Port 4000)**: **Node.js** with **Express 4**. Features JWT Role-Based Access Control (RBAC) middleware, and an atomic transaction engine to handle concurrent, cascading updates securely.
-- **Database Layer (Port 5432)**: **PostgreSQL** supercharged with **PostGIS**. Handles complex spatial geometry, ST_Intersects queries, cadastral parcel mapping, and versioned documents.
-- **AI Orchestrator (Port 8000)**: A dedicated **Python FastAPI** microservice housing the autonomous AI agents. Utilizes `pdfplumber` for extraction and Anthropic (Claude) or Regex heuristics for semantic validation.
+| Stakeholder Role | Persona in Demo | Portal / Route | Primary Responsibilities |
+| :--- | :--- | :--- | :--- |
+| **Requiring Body (PIU)** | NHAI Project Implementation Unit | `/submit-proposal` | Propose corridors, upload statutory deeds, submit PostGIS boundaries |
+| **District CALA (Collector)** | Rohan Deshmukh, IAS (District Collector) | `/workbench` | Run AI Scrutiny, adjudicate Sec 15 objections, advance stages, sign awards with DSC |
+| **Citizen / Landowner** | Ganesh Patil (Khatedar) | `/my-land` | Inspect parcel boundaries, review valuation formulas, lodge Sec 15 objections, receive DBT payouts |
+| **Field Surveyor** | Anita Kulkarni (Cadastral Surveyor) | `/field-survey` | Record on-ground GNSS coordinates, verify crop/tree/structural assets, submit field verification checklists |
+| **State / National Monitor** | MoRTH / PM GatiShakti Secretariat | `/dashboard` | National GIS dashboard, multi-state progress monitoring, executive MIS CSV export |
 
-### 4.2 Architectural Diagram
+---
+
+## 4. System Architecture & Technical Specifications
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Next.js Frontend (Port 3000)                       │
 │        React 19 · TypeScript · Tailwind CSS 4 · Radix UI Primitives     │
-│        Citizen Portal · CALA Workbench · GIS National Monitor           │
+│        Leaflet GIS (OpenStreetMap + ESRI Satellite) · UCL Dual-Pane     │
+│        Dynamic Multi-Site GIS Inspector · 1-Click Demo Persona Bar      │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │ /api/* proxy rewrite
                                      ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Express Backend API (Port 4000)                    │
 │        Node.js · JWT RBAC Middleware · Atomic Transaction Engine        │
-│        RFCTLARR State Machine · Cascading Audit Logging                 │
+│        RFCTLARR State Machine · UCL Spatial Engine · Audit Logging      │
 └───────────────────┬─────────────────────────────────┬───────────────────┘
                     │                                 │
                     │ PostgreSQL + PostGIS (Port 5432)│ Service-to-Service
@@ -78,64 +85,90 @@ NLAMS Vajracore employs a robust, highly scalable 3-tier microservices architect
 │  PostgreSQL / PostGIS Database       │  │ Python AI Orchestrator (:8000)│
 │  - Spatial geometry & ST_Intersects  │  │ - Legal Scrutinizer Agent     │
 │  - Cadastral parcels & boundaries    │  │ - Geospatial Analyzer Agent   │
-│  - RFCTLARR stage transitions        │  │ - R&R Calculator Agent        │
-│  - Versioned statutory documents     │  │ - PDF Extraction & Scrutiny   │
+│  - UCL city_survey_plots & ULPIN     │  │ - R&R Calculator Agent        │
+│  - RFCTLARR stage transitions        │  │ - PDF Extraction & Scrutiny   │
+│  - Versioned statutory documents     │  │                               │
 └──────────────────────────────────────┘  └───────────────────────────────┘
 ```
 
+### 4.1 Technology Stack Matrix
+- **Frontend**: Next.js 16 (App Router), React 19, TypeScript, TailwindCSS v4, Radix UI Primitives, Lucide Icons, Leaflet & React-Leaflet.
+- **Backend API**: Node.js, Express 4, PostgreSQL Driver (`pg`), JWT authentication, Multer for file streaming, Winston audit logger.
+- **Spatial Database**: PostgreSQL 14+ with PostGIS spatial extension (`ST_Intersects`, `ST_GeomFromGeoJSON`, `ST_Area`, `ST_Buffer`, spatial R-tree GIST indexing).
+- **AI Microservice**: Python 3.10+, FastAPI, Uvicorn, `pdfplumber` for statutory deed parsing, Anthropic Claude API / Deterministic Regex heuristic fallback.
+
 ---
 
-## 5. Detailed Core Features Explained
+## 5. Core Functional Modules
 
 ### 5.1 Multi-Agent AI Scrutiny Pipeline
-When the Requiring Body submits a proposal and title deeds, the CALA triggers the AI Scrutiny run. Three agents work in parallel:
-- **Legal Scrutinizer**: It ingests the PDF title deed, standardizing Indian naming honorifics (e.g., mapping 'Shri', 'Mr.', 'Smt.'). It extracts declared landowner names and survey coordinates, cross-referencing them against the PostgreSQL cadastral registry. If Mr. X claims survey 101, but the registry shows Mrs. Y, it flags an encumbrance immediately.
-- **Geospatial Analyzer**: It extracts the GeoJSON polygon submitted by the Requiring Body and runs an `ST_Intersects` audit against restricted layers in PostGIS (e.g., Mangrove buffers, Defense lands). This prevents illegal alignments before they are officially gazetted.
-- **R&R Compensation Calculator**: Automatically applies the RFCTLARR formula. It retrieves the base market value (circle rate) for the specific cadastral zone, applies the statutory rural/urban multiplier, adds a mandatory 100% Solatium, and calculates the exact resettlement grant.
+When a proposal is submitted, the District CALA triggers autonomous scrutiny:
+- **Legal Scrutinizer Agent**: Normalizes Indian naming honorifics (`Shri`, `Mr.`, `Smt.`, `Dr.`), parses owner names and survey plots from uploaded title deed PDFs, cross-checks against cadastral registry records, and flags encumbrances or title mismatches.
+- **Geospatial Analyzer Agent**: Executes PostGIS `ST_Intersects` spatial queries against eco-sensitive buffer layers (CRZ-I mangroves, reserved forests, water bodies, and defense zones).
+- **R&R Compensation Calculator Agent**: Deterministically applies RFCTLARR First and Second Schedule formulas:
+  $$\text{Total Compensation} = (\text{Market Value} \times \text{Multiplier}) + \text{100\% Solatium} + \text{12\% Annual Interest} + \text{Asset Valuation} + \text{R\&R Package}$$
 
-### 5.2 High-Resolution Multi-Corridor GIS Viewer
-The platform features an interactive satellite canvas displaying four authentic infrastructure corridors (e.g., Navi Mumbai Airport, High-Speed Rail).
-- **Interactive Inspection**: By dropping a reticle anywhere on the map, the system instantly computes live ground-truth data: exact Latitude/Longitude, Cadastral Revenue Survey Number, Village/Taluka, Land Classification (e.g., Agricultural Bagayat vs. Forest), and real-time circle rate valuation.
-- **Layering & Filtration**: Dynamic layers color-code parcels based on their current statutory status (*Acquired*, *In Progress*, *Disputed*).
+### 5.2 National Infrastructure GIS Map (`/dashboard`)
+An interactive Leaflet map featuring real geographic vector boundaries for 4 national megaprojects:
+1. **Navi Mumbai International Airport (NMIA)**: Runway 08L/26R, Runway 08R/26L, Terminal 1 concourse, Atal Setu expressway connector, and Ulwe CRZ-I mangrove eco-buffer.
+2. **Mumbai-Ahmedabad High-Speed Rail (MAHSR Bullet Train)**: Elevated viaduct right-of-way, Precast Girder Casting Yard #4, Traction Substation TSS-09, disputed plot 412/A, and CWC canal buffer.
+3. **Delhi-Mumbai Greenfield Expressway (NE-4, Package 14)**: 8-lane 70m ROW mainline, Vadodara-Bharuch Cloverleaf Interchange 14, automated FASTag toll plaza, and wayside amenities.
+4. **Pune-Mumbai Expressway Missing Link**: Twin-Tunnel Western & Eastern Portals, Kusgaon cable-stayed viaduct, and Borghat wildlife sanctuary buffer.
+- Features smooth **fly-to-bounds transitions**, layer filters (*Acquired*, *In Progress*, *Disputed*, *Eco-Buffer*), parcel dossier modals, and the **Surrounding Land Cadastral Inspector**.
 
-### 5.3 Complete Project Lifecycle & State Machine
-The system rigorously adheres to the RFCTLARR statutory milestones.
+### 5.3 Urban Cadastral Linkage (UCL) Module (`/cadastral-map`)
+Connects spatial City Survey plots to textual Property Cards using the 14-digit ULPIN:
+- Spatial demarcation of urban CTS plots on OpenStreetMap with color-coded tenure statuses.
+- Side-by-side synchronized Property Card (PR Card) PDF inspection.
+- Search and query by 14-digit ULPIN or CTS Number with auto-zoom and bounding highlights.
 
-```text
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  1. DRAFT    │ ──> │2. NOTIFIED_3A│ ──> │3. DECLARED_3D│ ──> │  4. AWARD    │ ──> │5. POSSESSION │
-└──────────────┘     └──────┬───────┘     └──────────────┘     └──────────────┘     └──────────────┘
- Proposal Setup             │              Final Declaration    Award Package        DBT Direct Payout
- Shapefile Upload           ▼              Hearing Closed       100% Solatium        Physical Handover
- Title Deed Attach   ┌──────────────┐      Land Vests to State  R&R Resettlement
-                     │Section 15    │
-                     │Objections    │
-                     │& Hearings    │
-                     └──────────────┘
-```
-- **DRAFT**: Initial documentation and polygon mapping.
-- **NOTIFIED_3A**: The preliminary notification. A mandatory objection window is opened for citizens to file Section 15 grievances via their portal.
-- **DECLARED_3D**: Final notification after the CALA officially resolves all objections with hearing notes.
-- **AWARD**: The AI R&R calculation is finalized, generating the formal compensation order.
-- **POSSESSION**: The compensation is processed via DBT integration, marking the land as formally acquired by the state.
+### 5.4 RFCTLARR Statutory State Machine
+Enforces strict statutory progression with database transaction integrity:
+$$\text{DRAFT} \longrightarrow \text{NOTIFIED\_3A} \longrightarrow \text{DECLARED\_3D} \longrightarrow \text{AWARD} \longrightarrow \text{POSSESSION}$$
+- **DRAFT**: Project setup, GeoJSON boundary submission, and title deed attachment.
+- **NOTIFIED_3A**: Preliminary notification published; opens citizen objection window.
+- **DECLARED_3D**: Final notification after the Collector conducts Section 15 hearings and enters official resolution notes.
+- **AWARD**: Final statutory compensation award declared with 100% Solatium and R&R grants.
+- **POSSESSION**: Compensation settled via direct e-Kuber DBT integration, transferring clear title to the state.
 
-### 5.4 Unified Proposal & Safe Deletion Systems
-- **National Corridor Archetypes**: Native support for diverse multi-state project configurations across highways, dedicated freight rail, logistics parks, and renewable transmission corridors.
-- **Transactional Clean-Up**: If a project proposal is cancelled or deleted, the backend executes a PostgreSQL transaction block to safely cascade and delete all nested records (compensations, objections, scrutiny reports, and geometries), guaranteeing zero database corruption.
+### 5.5 Safe Project Deletion & Clean-up Engine
+Safe proposal deletion (`DELETE /api/proposals/:id`) executed within an atomic PostgreSQL transaction (`BEGIN ... COMMIT / ROLLBACK`), cleanly cascading through `compensation`, `objections`, `scrutiny_reports`, `documents`, `parcels`, and `proposals`.
 
 ---
 
-## 6. Feasibility, Viability, and Impact
+## 6. Key API Endpoints Reference
 
-### 6.1 Technical Feasibility
-The platform is built on battle-tested, open-source technologies (PostgreSQL, Node.js, Python), ensuring there is no vendor lock-in. The use of PostGIS provides enterprise-grade spatial indexing out-of-the-box. Furthermore, our AI architecture includes robust deterministic fallbacks (Regex heuristics), meaning the system remains 100% functional even if third-party LLM APIs experience downtime.
+| Method | Endpoint | Access Role | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/login` | Public | Authenticate user & return signed JWT |
+| `GET` | `/api/auth/me` | Authenticated | Validate active session & return user profile |
+| `GET` | `/api/proposals` | Authenticated | List proposals (scoped by role & jurisdiction) |
+| `POST` | `/api/proposals` | `REQUIRING_BODY` | Register new acquisition proposal |
+| `PATCH` | `/api/proposals/:id/transition` | `CALA` | Advance RFCTLARR statutory lifecycle stage |
+| `DELETE` | `/api/proposals/:id` | `REQUIRING_BODY`, `CALA`, `STATE_MONITOR` | Transactionally delete project & cascading records |
+| `POST` | `/api/proposals/:id/scrutinize` | `CALA` | Trigger multi-agent AI scrutiny run on port 8000 |
+| `GET` | `/api/proposals/:id/scrutiny` | Authenticated | Retrieve latest AI scrutiny report |
+| `POST` | `/api/parcels` | `REQUIRING_BODY` | Demarcate parcel with PostGIS polygon coordinates |
+| `GET` | `/api/parcels/mine` | `CITIZEN` | Fetch registered parcels belonging to citizen |
+| `POST` | `/api/documents` | `REQUIRING_BODY`, `FIELD_SURVEYOR` | Upload statutory document (version-tracked) |
+| `GET` | `/api/compensation/proposal/:id` | Authenticated | Fetch assessed compensation awards |
+| `PATCH` | `/api/compensation/:id/approve` | `CALA` | Approve & disburse compensation via DBT |
+| `POST` | `/api/objections` | `CITIZEN` | Lodge Section 15 statutory objection |
+| `PATCH` | `/api/objections/:id/resolve` | `CALA` | Resolve citizen objection with hearing notes |
+| `GET` | `/api/dashboard/summary` | Authenticated | Aggregated national KPIs & timeline metrics |
+| `GET` | `/api/cadastral/plots` | Public / Authenticated | Query City Survey parcels with PostGIS geometries |
+| `GET` | `/api/cadastral/plots/:ulpin` | Public / Authenticated | Fetch single parcel by 14-digit ULPIN or CTS number & Property Card URL |
 
-### 6.2 Economic Viability
-- **SaaS / Cloud-Native**: The microservices architecture is perfectly suited for centralized deployment on government cloud infrastructure (like NIC MeghRaj), allowing for nationwide scaling without exponential hardware costs.
-- **Massive Cost Savings**: By automating legal verification and geospatial overlap checks, the government saves millions in consultancy fees, litigation costs, and administrative man-hours for every major project.
+---
 
-### 6.3 Strategic Impacts & National Benefits
-- **Eradication of Delays**: Instant AI validation prevents projects from stalling in environmental courts or facing stay orders due to faulty paperwork, directly accelerating national infrastructure delivery.
-- **Restored Trust & Transparency**: By providing citizens with direct visibility into their compensation calculations and a digital channel to raise objections, the system drastically reduces friction and civil unrest associated with land acquisition.
-- **Data-Driven Governance**: Central Ministries gain a unified, transparent bird's-eye view of all state-level land acquisitions, ensuring strategic alignment with the **PM GatiShakti National Master Plan**.
+## 7. Feasibility, National Impact & Hackathon Alignment
 
+### 7.1 Technical Feasibility
+- **100% Free & Open-Source Stack**: Built on Node.js, Next.js, PostgreSQL/PostGIS, and OpenStreetMap—eliminating expensive commercial GIS licenses and proprietary APIs.
+- **Fail-Safe Fallback**: Deterministic regex fallback ensures full system availability even during external AI API downtime.
+- **Zero Mock Data**: Every parcel click, stage advance, and objection update syncs with real PostgreSQL records.
+
+### 7.2 Strategic & National Impact (PM GatiShakti & Viksit Bharat 2047)
+- **Elimination of Multi-Year Delays**: Automated deed verification and PostGIS environmental intersection audits resolve disputes before statutory gazette declaration.
+- **Eradication of Corruption**: 100% transparent statutory formulas, auditable DSC signatures, and direct bank transfers (DBT) eliminate intermediaries.
+- **Unified Master Plan Oversight**: Central Ministries receive real-time, cross-state acquisition metrics directly aligned with the **PM GatiShakti National Master Plan**.

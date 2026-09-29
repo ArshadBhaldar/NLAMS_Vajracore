@@ -1,4 +1,4 @@
-# NLAMS 2.0 — National Land Acquisition & Management System (Vajracore)
+# VajraBhoomi (वज्रभूमि) — National Land Governance & Acquisition System
 
 [![Next.js](https://img.shields.io/badge/Next.js-16_App_Router-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
@@ -7,7 +7,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-Python_AI_Orchestrator-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-**NLAMS 2.0 (National Land Acquisition & Management System)** is a comprehensive, production-grade digital platform developed for the **Smart India Hackathon (SIH 2026)**. It digitizes the entire land acquisition lifecycle in India — from project proposal registration and PostGIS spatial boundary geofencing to multi-agent AI scrutiny, statutory gazette milestones, Section 15 objection redressal, Direct Benefit Transfer (DBT) compensation disbursement, and final possession under the **RFCTLARR Act 2013** and **PM GatiShakti National Master Plan**.
+**VajraBhoomi (वज्रभूमि)** is a comprehensive, production-grade Digital Public Infrastructure (DPI) platform developed for the **Smart India Hackathon (SIH 2026)**. It digitizes the entire land acquisition lifecycle in India — from project proposal registration and PostGIS spatial boundary geofencing to multi-agent AI scrutiny, statutory gazette milestones, Section 15 objection redressal, Direct Benefit Transfer (DBT) compensation disbursement, and final possession under the **RFCTLARR Act 2013** and **PM GatiShakti National Master Plan**.
 
 ---
 
@@ -17,6 +17,7 @@
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Next.js Frontend (Port 3000)                       │
 │        React 19 · TypeScript · Tailwind CSS 4 · Radix UI Primitives     │
+│        Leaflet GIS (OpenStreetMap + ESRI Satellite) · Urban Cadastral   │
 │        Dynamic Multi-Site GIS Inspector · 1-Click Demo Persona Bar      │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │ /api/* proxy rewrite
@@ -24,7 +25,7 @@
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                      Express Backend API (Port 4000)                    │
 │        Node.js · JWT RBAC Middleware · Atomic Transaction Engine        │
-│        RFCTLARR State Machine · Cascading Audit Logging                 │
+│        RFCTLARR State Machine · UCL Spatial Engine · Audit Logging      │
 └───────────────────┬─────────────────────────────────┬───────────────────┘
                     │                                 │
                     │ PostgreSQL + PostGIS (Port 5432)│ Service-to-Service
@@ -33,8 +34,9 @@
 │  PostgreSQL / PostGIS Database       │  │ Python AI Orchestrator (:8000)│
 │  - Spatial geometry & ST_Intersects  │  │ - Legal Scrutinizer Agent     │
 │  - Cadastral parcels & boundaries    │  │ - Geospatial Analyzer Agent   │
-│  - RFCTLARR stage transitions        │  │ - R&R Calculator Agent        │
-│  - Versioned statutory documents     │  │ - PDF Extraction & Scrutiny   │
+│  - UCL city_survey_plots & ULPIN     │  │ - R&R Calculator Agent        │
+│  - RFCTLARR stage transitions        │  │ - PDF Extraction & Scrutiny   │
+│  - Versioned statutory documents     │  │                               │
 └──────────────────────────────────────┘  └───────────────────────────────┘
 ```
 
@@ -44,34 +46,57 @@ The frontend seamlessly proxies all `/api/*` network requests to the backend on 
 
 ## ⚡ Core Features & Innovations
 
-### 1. 🤖 Multi-Agent AI Scrutiny Pipeline (Port 8000)
-Every submitted acquisition proposal and statutory title deed is cross-audited in parallel by three autonomous AI agents:
-- **Legal Scrutinizer Agent**: Parses uploaded statutory title deeds (`pdfplumber` / regex heuristic fallback or Claude LLM), normalizes Indian naming honorifics (`Mr.`, `Shri`, `Smt.`, `Dr.`), verifies declared landowner names against cadastral registry records, and flags discrepancies or encumbrances with 100% precision.
+### 1. 🏛️ Statutory Decision Support System (DSS) & Human-in-the-Loop (HITL) Pipeline
+Under administrative law and the **RFCTLARR Act (2013)**, compulsory land acquisition and compensation cannot be delegated to an autonomous black-box algorithm. **VajraBhoomi explicitly positions AI not as an autonomous judge, but as an auditable Decision Support System (DSS)**:
+
+- **AI as the "Preparer"**: Ingests baseline registry records, extracts legal deeds, and computes the preliminary **Draft Award Sheet (Section 23/31)** including the mandatory 100% Solatium (Sec 30(1)) and 12% additional market value (Sec 30(3)).
+- **Human Authority as the "Approver"**: The Competent Authority / District Collector (CALA) reviews the statutory formula breakdown, exercises judicial discretion if needed, and is the **only one** empowered to legally sign and lock the award using Government of India **Class-3 Digital Signature Certificates (DSC)**.
+- **Dynamic 3-Tier Confidence Triage**:
+  - 🟢 **Green Flag Route (>90% Confidence)**: Clean title, single Khatedar, zero statutory buffer violations. Fast-tracks for single-click CALA DSC countersignature.
+  - 🟡 **Amber Flag Route (70–89% Confidence)**: Area variance between RoR and GIS polygon, or multiple joint heirs. Flags for Patwari ground inspection.
+  - 🔴 **Red Flag Route (<70% Confidence)**: Encumbrances, court injunctions (lis pendens), or forest/CRZ overlaps. Automatically schedules mandatory personal hearings before the Collector under Section 15.
+
+#### Multi-Agent Statutory Ingestion Agents (Port 8000)
+- **Legal Scrutinizer Agent**: Parses uploaded statutory title deeds (`pdfplumber` / regex heuristic fallback or Claude LLM), normalizes Indian naming honorifics (`Mr.`, `Shri`, `Smt.`, `Dr.`), verifies declared landowner names against cadastral registry records, and flags discrepancies or encumbrances.
 - **Geospatial Analyzer Agent**: Performs PostGIS spatial intersection audits (`ST_Intersects`) across parcel polygon coordinates against restricted environmental buffer zones (forest reserves, coastal CRZ, defense buffers, and water bodies).
-- **R&R Compensation Calculator Agent**: Deterministically calculates statutory compensation packages strictly adhering to the **Right to Fair Compensation and Transparency in Land Acquisition, Rehabilitation and Resettlement (RFCTLARR) Act 2013**:
-  $$\text{Total Award} = (\text{Base Market Value} \times \text{Rural Multiplier}) + \text{100\% Solatium} + \text{R\&R Resettlement Grant}$$
+- **R&R Compensation Calculator Agent**: Deterministically calculates statutory compensation packages strictly adhering to Sections 26–30 and the Second Schedule of the RFCTLARR Act 2013:
+  $$\text{Draft Award} = (\text{Base Market Value} \times \text{Multiplier}) + \text{100\% Solatium} + \text{12\% Interest} + \text{Assets (Sec 29)} + \text{R\&R Package}$$
 
-### 2. 🛰️ Multi-Corridor High-Resolution GIS Satellite Viewer (`/dashboard`)
-An interactive, GPU-accelerated satellite viewer displaying 4 authentic major national infrastructure projects:
-- ✈️ **Navi Mumbai International Airport (NMIA)**: 1,160 hectares across Ulwe, Targhar, Kombadbhuje, Ganeshpuri, Kopar, and Vaghivalivada villages, including twin-runway layouts (08L/26R & 08R/26L), passenger terminal footprint, and CRZ-I coastal mangrove eco-buffers.
-- 🚄 **Mumbai-Ahmedabad High-Speed Rail (MAHSR Bullet Train)**: Elevated viaduct alignment, 42-hectare precast box-girder casting yard, traction substation, and irrigation canal buffer across Navsari & Chikhli agricultural belt.
+### 2. 🗺️ National Infrastructure GIS Map with OpenStreetMap (OSM) & ESRI Satellite (`/dashboard`)
+An interactive, high-precision Leaflet GIS map powered by genuine **OpenStreetMap (OSM)** raster tiles with a 1-click **ESRI World Imagery Satellite** toggle — operating with **zero API keys and zero watermarks**:
+- ✈️ **Navi Mumbai International Airport (NMIA)**: 1,160 hectares across Ulwe, Targhar, Kombadbhuje, Ganeshpuri, Kopar, and Vaghivalivada villages, including twin-runway layouts (08L/26R & 08R/26L), passenger terminal footprint, Atal Setu link, and CRZ-I coastal mangrove eco-buffers.
+- 🚄 **Mumbai-Ahmedabad High-Speed Rail (MAHSR Bullet Train)**: Multi-kilometer viaduct right-of-way, 42-hectare precast box-girder casting yard #4, traction substation (TSS-09), disputed agricultural plot 412/A, and irrigation canal buffer across Navsari & Chikhli agricultural belt.
 - 🛣️ **Delhi-Mumbai Greenfield Expressway (NE-4, Package 14)**: 8-lane 70m ROW mainline, cloverleaf grade-separated interchange (Junction 14), smart FASTag automated toll plaza, and wayside amenities across Karjan & Miyagam farmlands.
-- 🏔️ **Pune-Mumbai Expressway Missing Link**: Khandala Ghat bypass tunnel portals, Haveli transition corridor, and Mulshi forest sanctuary buffer.
+- 🏔️ **Pune-Mumbai Expressway Missing Link**: Khandala Ghat bypass twin-tunnel portals, Kusgaon cable-stayed viaduct, and Mulshi/Borghat wildlife sanctuary eco-buffer.
 
-#### Surrounding Land Cadastral Inspector
-- **Pan & Smooth Zoom Canvas**: Drag to pan across surrounding terrain; mouse wheel and HUD buttons (`+`, `-`, `↺`) for zoom control from `1.0x` up to `3.5x` with dynamic metric scale calculations.
-- **Click-to-Inspect Any Land Parcel**: Clicking anywhere on the satellite imagery drops an animated Cadastral Reticle/Pin and computes live, authentic ground-truth revenue data:
-  - Real geographic coordinates (Latitude / Longitude down to 6 decimal places).
-  - Real Cadastral Revenue Survey / Gat number.
-  - Real Revenue Village, Taluka, and District.
-  - Cadastral Land Classification (Agricultural Jirayat, Agricultural Bagayat, Gaothan Abadi, CRZ-I Mangrove, Highway ROW).
-  - Authentic Government Ready Reckoner / Circle Rate valuation per sqm + 100% Solatium payout under RFCTLARR 2013.
-  - Proximity & Alignment query (distance to corridor centerline).
-- **Cinema / Theatre Mode**: Expands satellite canvas to full viewport width for high-impact presentations.
-- **Interactive Layer Toggles**: Filter parcels dynamically by status: *Acquired (emerald)*, *In Progress (amber)*, *Disputed (rose)*, and *Eco-Sensitive Buffers (hatched)*.
+#### Core Capabilities:
+- **Fly-to-Project Navigation**: Instant animated camera transition zooming to the precise geographic bounding box of any national corridor.
+- **In-Map Spatial Demarcation Layers**: Real-time layer filtering for *Acquired (emerald)*, *In Progress (amber)*, *Disputed (rose)*, and *Eco-Sensitive Buffers (hatched)*.
+- **Interactive Parcel Dossier Dialog**: Click on any corridor polygon to view official survey number, demarcated area, disbursement status, and statutory stage.
+- **Surrounding Land Cadastral Inspector**: Click anywhere across India on the OpenStreetMap to drop a GNSS reticle pin and calculate real-time ground-truth revenue intelligence:
+  - Exact Latitude / Longitude (6 decimal places)
+  - Cadastral Revenue Survey / Gat number & sub-division
+  - Revenue Village, Taluka, and District
+  - Land Classification (Agricultural Jirayat/Bagayat, Gaothan Abadi, CRZ-I, Highway ROW)
+  - Government Ready Reckoner / Circle Rate + 100% Solatium payout under RFCTLARR 2013
+  - Proximity to ongoing infrastructure alignment
+- **Cinema Mode**: Viewport expands dynamically for high-impact presentations.
 - **Executive MIS Report Downloader**: Instant CSV report generation (`NLAMS_Acquisition_MIS_Report_<date>.csv`) summarizing state, district, notified hectares, and financial disbursement metrics.
 
-### 3. 🎲 6 Curated National Infrastructure Demo Scenarios (`/submit-proposal`)
+### 3. 🏙️ Urban Cadastral Linkage (UCL) Module & ULPIN / Bhu-Aadhaar Engine (`/cadastral-map`)
+The **Urban Cadastral Linkage (UCL) Module** bridges the historical divide between spatial City Survey map boundaries (polygons) and textual Property Cards (PR Cards):
+- **ULPIN as Primary Key**: Links cadastral polygons with statutory property records using the Government of India's 14-digit **Unique Land Parcel Identification Number (ULPIN / Bhu-Aadhaar)**.
+- **PostGIS Spatial Table (`city_survey_plots`)**:
+  - `id` (UUID), `ulpin` (VARCHAR 14, unique), `owner_name`, `cts_number` (City Title Survey Number)
+  - `ward_division`, `area_sqm`, `property_card_url` (PDF storage / S3)
+  - `geom` (`GEOMETRY(Polygon, 4326)` with PostGIS spatial indexing)
+  - Mutation history & encumbrance flags (mortgages, court attachments, lis pendens)
+- **Dual-Pane Interactive Interface**:
+  - Left pane displays Leaflet OpenStreetMap with color-coded CTS survey parcels and zoom-to-parcel interactions.
+  - Right pane renders the official Sub-Registrar Property Card (PR Card) PDF with full metadata inspection.
+- **Instant Search**: Search by 14-digit ULPIN or CTS Number to immediately locate, zoom, and highlight any urban plot.
+
+### 4. 🎲 6 Curated National Infrastructure Demo Scenarios (`/submit-proposal`)
 A 1-click **"Load Random Scenario"** feature populates realistic project specifications without manual typing:
 
 | # | Sector | Project Name | State / District | Landowner & Claimed Area | GeoJSON Location |
@@ -83,7 +108,7 @@ A 1-click **"Load Random Scenario"** feature populates realistic project specifi
 | **5** | **Renewable Hybrid Park** | Khavda Ultra Mega Renewable Energy Hybrid Park — 765kV Substation | Gujarat, Kutch | Shri Suresh Kumar Jadeja (145,000 sqm) | Kutch solar/wind grid link |
 | **6** | **Industrial Expressway** | Bengaluru-Chennai Expressway (NE-7) — Hoskote to Malur Package I | Karnataka, Bengaluru Rural | Shri M. Venkataswamy (36,500 sqm) | Auto cluster link |
 
-### 4. 📜 Authentic Statutory Title Deed Documents Repository
+### 5. 📜 Authentic Statutory Title Deed Documents Repository
 Seven official statutory Title Deed PDF certificates generated with state revenue seals, cadastral coordinates, revenue extracts, and sub-registrar stamps (stored in `public/sample_documents/` and `sample_documents/`):
 - 6 scenario-matching PDFs with registered landowner names and survey numbers.
 - 1 intentional discrepancy test deed (`Title_Deed_Mismatch_Disputed_Sample.pdf`) to demonstrate AI Legal Scrutinizer mismatch detection.
@@ -92,12 +117,12 @@ Seven official statutory Title Deed PDF certificates generated with state revenu
   - **1-Click Auto-Attach**: In-browser instant attachment via Blob API into the form state.
   - **Quick-Pick Pills**: Instant document switching for pitch testing.
 
-### 5. 🗑️ Full Project Deletion & Transactional Clean-up
+### 6. 🗑️ Full Project Deletion & Transactional Clean-up
 - Safe project proposal deletion (`DELETE /api/proposals/:id`) executed inside a PostgreSQL transaction (`BEGIN ... COMMIT / ROLLBACK`).
 - Cascades through dependent records: `compensation`, `objections`, `scrutiny_reports`, `documents`, `parcels`, and `proposals`.
 - Interactive confirmation modal with project metadata and warning, plus real-time reactive UI update.
 
-### 6. ⚖️ Statutory Workflow & Milestone Progression (`/workbench`)
+### 7. ⚖️ Statutory Workflow & Milestone Progression (`/workbench`)
 - RFCTLARR statutory milestone state machine:
   $$\text{DRAFT} \longrightarrow \text{NOTIFIED\_3A} \longrightarrow \text{DECLARED\_3D} \longrightarrow \text{AWARD} \longrightarrow \text{POSSESSION}$$
 - Multi-district authority allowing CALA to adjudicate proposals across all national demo corridors.
@@ -236,6 +261,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `PATCH` | `/api/objections/:id/resolve` | `CALA` | Resolve citizen objection with hearing notes |
 | `GET` | `/api/dashboard/summary` | Authenticated | Aggregated national KPIs & timeline metrics |
 | `GET` | `/api/audit/:type/:id` | Authenticated | Cryptographic, immutable audit log trail |
+| `GET` | `/api/cadastral/plots` | Public / Authenticated | Query City Survey parcels with PostGIS geometries |
+| `GET` | `/api/cadastral/plots/:ulpin` | Public / Authenticated | Fetch single parcel by 14-digit ULPIN or CTS number & Property Card URL |
 
 ---
 
@@ -244,6 +271,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ```text
 c:\NLAMS_Vajracore\
 ├── app/                              # Next.js 16 App Router pages
+│   ├── cadastral-map/page.tsx        # Urban Cadastral Linkage (UCL) & ULPIN Map
 │   ├── dashboard/page.tsx            # State Monitor National GIS Dashboard
 │   ├── field-survey/page.tsx         # Field Surveyor GNSS inspection queue
 │   ├── login/page.tsx                # Authentication with 1-click persona logins
@@ -251,7 +279,11 @@ c:\NLAMS_Vajracore\
 │   ├── submit-proposal/page.tsx      # Unified Proposal Submission portal
 │   └── workbench/page.tsx            # CALA Scrutiny Workbench
 ├── components/
+│   ├── national-gis-leaflet-map.tsx  # Dynamic OpenStreetMap & ESRI GIS Map Engine
 │   ├── nlams-app.tsx                 # Core UI component tree, GIS viewer & state
+│   ├── ucl-leaflet-map.tsx           # Leaflet UCL Cadastral Map Engine
+│   ├── urban-cadastral-map.tsx       # Urban Cadastral Linkage (UCL) Dual-Pane Engine
+│   ├── vajrabhoomi-logo.tsx          # Official VajraBhoomi Ashoka emblem branding
 │   └── ui/                           # Radix UI primitives & design tokens
 ├── lib/
 │   ├── api.ts                        # Centralized type-safe API client (JWT injection)
@@ -262,10 +294,15 @@ c:\NLAMS_Vajracore\
 ├── backend/
 │   ├── src/
 │   │   ├── config/                   # PostgreSQL pool & centralized RBAC permissions
-│   │   ├── controllers/              # Route controllers (proposals, parcels, documents, etc.)
+│   │   ├── controllers/              # Route controllers (proposals, parcels, cadastral, documents)
+│   │   │   └── cadastral.controller.js # Urban Cadastral Linkage REST controller
 │   │   ├── db/                       # Schema DDL, seed SQL, and setup scripts
+│   │   │   ├── ucl_schema.sql        # City Survey Plots PostGIS table DDL
+│   │   │   ├── ucl_seed.sql          # Authentic Pune CTS sample records
+│   │   │   └── ucl_seed_runner.js    # Automated seed executor
 │   │   ├── middleware/               # Auth, RBAC, file upload & error handlers
 │   │   ├── routes/                   # Express REST route definitions
+│   │   │   └── cadastral.routes.js   # Urban Cadastral Linkage REST routes
 │   │   ├── services/                 # Audit logging & notification services
 │   │   └── utils/                    # Statutory state machine transitions
 │   └── generate_all_sample_documents.js # Generator for official Title Deed PDFs

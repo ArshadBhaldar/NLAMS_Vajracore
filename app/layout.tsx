@@ -3,8 +3,13 @@ import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
 
 export const metadata: Metadata = {
-  title: "NLAMS 2.0 — National Land Acquisition & Management System",
-  description: "A secure, transparent platform for land acquisition and rehabilitation management.",
+  title: "VajraBhoomi — National Land Governance & Acquisition System",
+  description: "India's Sovereign Digital Public Infrastructure for Land Governance and Fair Acquisition (RFCTLARR 2013).",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
